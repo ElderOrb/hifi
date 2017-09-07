@@ -9,6 +9,8 @@ import "../styles-uit" as StylesUIt
 Flickable {
     id: flick
 
+    contentWidth: width
+
     property alias url: _webview.url
     property alias canGoBack: _webview.canGoBack
     property alias webViewCore: _webview
@@ -26,11 +28,16 @@ Flickable {
         id: hifi
     }
 
+    // the only reason for this thing is the fact that sometimes height might be negative! (bug in Qt?)
+    property int lastValidHeight: 0;
     onHeightChanged: {
         if (height > 0) {
-            //reload page since window dimentions changed,
-            //so web engine should recalculate page render dimentions
-            reloadTimer.start()
+
+            contentHeight = height;
+            lastValidHeight = height;
+
+            if(pageLoaded)
+                contentSizeTimer.restart()
         }
     }
 
@@ -46,10 +53,12 @@ Flickable {
         }
     }
 
+    property bool pageLoaded: false;
+
     function onLoadingChanged(loadRequest) {
         if (WebEngineView.LoadStartedStatus === loadRequest.status) {
-            flick.contentWidth = flick.width
-            flick.contentHeight = flick.height
+            flick.contentHeight = lastValidHeight;
+            pageLoaded = false;
 
             // Required to support clicking on "hifi://" links
             var url = loadRequest.url.toString();
@@ -61,37 +70,45 @@ Flickable {
         }
 
         if (WebEngineView.LoadFailedStatus === loadRequest.status) {
+            pageLoaded = false;
             console.log(" Tablet WebEngineView failed to load url: " + loadRequest.url.toString());
         }
 
         if (WebEngineView.LoadSucceededStatus === loadRequest.status) {
             //disable Chromium's scroll bars
             _webview.runJavaScript("document.body.style.overflow = 'hidden';");
-            //calculate page height
-            _webview.runJavaScript("document.body.scrollHeight;", function (i_actualPageHeight) {
-                if (i_actualPageHeight !== undefined) {
-                    flick.contentHeight = i_actualPageHeight
-                } else {
-                    flick.contentHeight = flick.height;
-                }
-            })
-            flick.contentWidth = flick.width
+
+            pageLoaded = true;
+            contentSizeTimer.restart()
         }
     }
 
+    function adjustFlickableHeight() {
+        //calculate page height
+        _webview.runJavaScript("document.body.scrollHeight;", function (i_actualPageHeight) {
+            if (i_actualPageHeight !== undefined) {
+                flick.contentHeight = Math.max(i_actualPageHeight, lastValidHeight)
+            } else {
+                flick.contentHeight = lastValidHeight;
+            }
+        })
+    }
+
     Timer {
-        id: reloadTimer
-        interval: 100
+        id: contentSizeTimer
+        interval: 200
         repeat: false
         onTriggered: {
-            _webview.reload()
+            adjustFlickableHeight();
         }
     }
 
     WebEngineView {
         id: _webview
 
+
         height: parent.height
+        width: parent.width
 
         profile: HFWebEngineProfile;
 
@@ -124,7 +141,6 @@ Flickable {
         property string newUrl: ""
 
         Component.onCompleted: {
-            width = Qt.binding(function() { return flick.width; });
             webChannel.registerObject("eventBridge", eventBridge);
             webChannel.registerObject("eventBridgeWrapper", eventBridgeWrapper);
             // Ensure the JS from the web-engine makes it to our logging
@@ -140,8 +156,8 @@ Flickable {
         }
 
         onContentsSizeChanged: {
-            flick.contentHeight = Math.max(contentsSize.height, flick.height);
-            flick.contentWidth = flick.width
+
+            contentSizeTimer.restart();
         }
         //disable popup
         onContextMenuRequested: {
