@@ -135,6 +135,10 @@ Script.include("/~/system/libraries/controllers.js");
             100);
 
         this.outlineConfig = Render.getConfig("RenderMainView.OutlineEffect");
+        this.outlineConfig.width = 1.5; 
+        this.outlineConfig.fillOpacityUnoccluded = 0.0;
+        this.outlineConfig.fillOpacityOccluded = 0.0;
+
         this.outlinedObjectID = null; // outlined objectID
         this.outlinedObjectType = null; // outlined object type (btw, why is it required to remove outline?)
         this.lastLaserPointerMode = LASER_POINTER_MODE_HOLD;
@@ -148,14 +152,11 @@ Script.include("/~/system/libraries/controllers.js");
             this.outlinedObjectType = null;
         };
 
-        this.enableOutline = function (objectID, objectType, halfOrFull) {
+        this.enableOutline = function (objectID, objectType, isMarketplaceItem) {
 
             if (objectID !== null && objectType !== null) {
 
-                var props = Entities.getEntityProperties(objectID, ["marketplaceID"]);
-                var isMarketplaceItem = props.marketplaceID;
-                var outlineColor = halfOrFull === LASER_POINTER_MODE_HALF ? (isMarketplaceItem ? COLORS_GRAB_SEARCHING_HALF_SQUEEZE_MARKET_ITEM : COLORS_GRAB_SEARCHING_HALF_SQUEEZE)
-                    : COLORS_GRAB_SEARCHING_FULL_SQUEEZE;
+                var outlineColor = isMarketplaceItem ? COLORS_GRAB_SEARCHING_HALF_SQUEEZE_MARKET_ITEM : COLORS_GRAB_SEARCHING_HALF_SQUEEZE;
 
                 this.outlineConfig.colorR = outlineColor.red / 255;
                 this.outlineConfig.colorG = outlineColor.green / 255;
@@ -179,6 +180,7 @@ Script.include("/~/system/libraries/controllers.js");
                     if (this.entityWithContextOverlay && (selectedObjectID !== this.outlinedObjectID)) { // entity has context overlay ? keep prev outline
                         return;
                     }
+
                     if (intersection.type === RayPick.INTERSECTED_ENTITY) {
                         selectedObjectType = "entity";
                     } else if (intersection.type === RayPick.INTERSECTED_OVERLAY) {
@@ -188,7 +190,16 @@ Script.include("/~/system/libraries/controllers.js");
                     }
 
                     this.disableOutline();
-                    this.enableOutline(selectedObjectID, selectedObjectType, laserPointerMode);
+
+                    if (laserPointerMode === LASER_POINTER_MODE_HALF) {
+                        var props = Entities.getEntityProperties(selectedObjectID, ["marketplaceID", "dynamic", "shapeType"]);
+                        var isMarketplaceItem = props.marketplaceID;
+                        var isDynamic = propsArePhysical(props);
+
+                        if (isMarketplaceItem || isDynamic) {
+                            this.enableOutline(selectedObjectID, selectedObjectType, isMarketplaceItem);
+                        }
+                    }
                 }
             }
 
