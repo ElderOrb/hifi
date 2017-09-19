@@ -29,6 +29,7 @@
 
 #include <TextureCache.h>
 #include <PathUtils.h>
+#include <BuildInfo.h>
 
 #include "../Logging.h"
 #include "../CompositorHelper.h"
@@ -38,9 +39,7 @@ static const QString DISABLE_PREVIEW = "Disable Preview";
 static const QString FRAMERATE = DisplayPlugin::MENU_PATH() + ">Framerate";
 static const QString DEVELOPER_MENU_PATH = "Developer>" + DisplayPlugin::MENU_PATH();
 static const bool DEFAULT_MONO_VIEW = true;
-#if !defined(Q_OS_MAC)
 static const bool DEFAULT_DISABLE_PREVIEW = false;
-#endif
 static const glm::mat4 IDENTITY_MATRIX;
 
 //#define LIVE_SHADER_RELOAD 1
@@ -62,8 +61,6 @@ QRect HmdDisplayPlugin::getRecommendedOverlayRect() const {
     return CompositorHelper::VIRTUAL_SCREEN_RECOMMENDED_OVERLAY_RECT;
 }
 
-#define DISABLE_PREVIEW_MENU_ITEM_DELAY_MS 500
-
 bool HmdDisplayPlugin::internalActivate() {
     _monoPreview = _container->getBoolSetting("monoPreview", DEFAULT_MONO_VIEW);
     _clearPreviewFlag = true;
@@ -73,20 +70,7 @@ bool HmdDisplayPlugin::internalActivate() {
         _container->setBoolSetting("monoPreview", _monoPreview);
     }, true, _monoPreview);
 
-    _disablePreview = _container->getBoolSetting("disableHmdPreview", DEFAULT_DISABLE_PREVIEW || _vsyncEnabled);
-
-    QTimer::singleShot(DISABLE_PREVIEW_MENU_ITEM_DELAY_MS, [this] {
-        if (isActive() && !_vsyncEnabled) { // disallow preview with enabled vsync because main window refresh rate, is typically 60 Hz, while most HMD output has to be at 90 Hz.
-            _container->addMenuItem(PluginType::DISPLAY_PLUGIN, MENU_PATH(), DISABLE_PREVIEW,
-                [this](bool clicked) {
-                _disablePreview = clicked;
-                _container->setBoolSetting("disableHmdPreview", _disablePreview);
-                if (_disablePreview) {
-                    _clearPreviewFlag = true;
-                }
-            }, true, _disablePreview);
-        }
-    });
+    connect(this, &OpenGLDisplayPlugin::contextCustomized, this, &HmdDisplayPlugin::onContextCustomized, Qt::QueuedConnection);
 
     _container->removeMenu(FRAMERATE);
     for_each_eye([&](Eye eye) {
@@ -99,6 +83,8 @@ bool HmdDisplayPlugin::internalActivate() {
 }
 
 void HmdDisplayPlugin::internalDeactivate() {
+
+    disconnect(this, &OpenGLDisplayPlugin::contextCustomized, this, &HmdDisplayPlugin::onContextCustomized);
     Parent::internalDeactivate();
 }
 
@@ -120,6 +106,24 @@ void HmdDisplayPlugin::uncustomizeContext() {
     _overlayRenderer = OverlayRenderer();
     _previewTexture.reset();
     Parent::uncustomizeContext();
+}
+
+void HmdDisplayPlugin::onContextCustomized()
+{
+    _disablePreview = _container->getBoolSetting("disableHmdPreview", DEFAULT_DISABLE_PREVIEW || _vsyncEnabled);
+
+    // disallow preview with enabled vsync because main window refresh rate, is typically 60 Hz, while most HMD output has to be at 90 Hz.
+    // but allow for dev builds
+    if (isActive() && (!_vsyncEnabled || BuildInfo::VERSION == "dev")) {
+        _container->addMenuItem(PluginType::DISPLAY_PLUGIN, MENU_PATH(), DISABLE_PREVIEW,
+            [this](bool clicked) {
+            _disablePreview = clicked;
+            _container->setBoolSetting("disableHmdPreview", _disablePreview);
+            if (_disablePreview) {
+                _clearPreviewFlag = true;
+            }
+        }, true, _disablePreview);
+    }
 }
 
 ivec4 HmdDisplayPlugin::getViewportForSourceSize(const uvec2& size) const {

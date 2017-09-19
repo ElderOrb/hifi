@@ -82,6 +82,9 @@ public:
 
     void copyTextureToQuickFramebuffer(NetworkTexturePointer source, QOpenGLFramebufferObject* target, GLsync* fenceSync) override;
 
+signals:
+    void contextCustomized();
+
 protected:
     friend class PresentThread;
 

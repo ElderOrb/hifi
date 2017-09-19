@@ -12,5 +12,6 @@ include_hifi_library_headers(ktx)
 include_hifi_library_headers(render)
 
 target_opengl()
+target_include_directories(${TARGET_NAME} PRIVATE "${CMAKE_BINARY_DIR}/includes")
 
 GroupSources("src/display-plugins")

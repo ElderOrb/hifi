@@ -82,6 +82,9 @@ protected:
     RateCounter<> _stutterRate;
 
     bool _disablePreview { true };
+private slots:
+    void onContextCustomized();
+
 private:
     ivec4 getViewportForSourceSize(const uvec2& size) const;
     float getLeftCenterPixel() const;

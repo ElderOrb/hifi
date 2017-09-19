@@ -432,6 +432,8 @@ void OpenGLDisplayPlugin::customizeContext() {
         }
     }
     updateCompositeFramebuffer();
+
+    emit contextCustomized();
 }
 
 void OpenGLDisplayPlugin::uncustomizeContext() {
