@@ -80,7 +80,7 @@ bool HmdDisplayPlugin::internalActivate() {
 #endif
 
     QTimer::singleShot(DISABLE_PREVIEW_MENU_ITEM_DELAY_MS, [this] {
-        if (isActive() && !_vsyncEnabled) {
+        if (isActive() && !_vsyncEnabled) { // disallow preview with enabled vsync because main window refresh rate, is typically 60 Hz, while most HMD output has to be at 90 Hz.
             _container->addMenuItem(PluginType::DISPLAY_PLUGIN, MENU_PATH(), DISABLE_PREVIEW,
                 [this](bool clicked) {
                 _disablePreview = clicked;
