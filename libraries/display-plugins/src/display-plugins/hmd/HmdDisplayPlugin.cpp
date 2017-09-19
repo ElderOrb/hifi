@@ -73,11 +73,7 @@ bool HmdDisplayPlugin::internalActivate() {
         _container->setBoolSetting("monoPreview", _monoPreview);
     }, true, _monoPreview);
 
-#if defined(Q_OS_MAC)
-    _disablePreview = true;
-#else
     _disablePreview = _container->getBoolSetting("disableHmdPreview", DEFAULT_DISABLE_PREVIEW || _vsyncEnabled);
-#endif
 
     QTimer::singleShot(DISABLE_PREVIEW_MENU_ITEM_DELAY_MS, [this] {
         if (isActive() && !_vsyncEnabled) { // disallow preview with enabled vsync because main window refresh rate, is typically 60 Hz, while most HMD output has to be at 90 Hz.
