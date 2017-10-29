@@ -33,7 +33,10 @@ Item {
     property bool keyboardRaised: false
     property bool punctuationMode: false
 
-    onKeyboardRaisedChanged: d.resize();
+    onKeyboardRaisedChanged: { 
+        console.debug('LinkAccountBody.qml: onKeyboardRaisedChanged: ', keyboardRaised)
+        d.resize();
+    }
 
     QtObject {
         id: d

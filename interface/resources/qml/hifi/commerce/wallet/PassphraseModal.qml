@@ -27,6 +27,11 @@ Item {
     id: root;
     z: 997;
     property bool keyboardRaised: false;
+
+    onKeyboardRaisedChanged: { 
+        console.debug('PassphraseModal.qml: onKeyboardRaisedChanged: ', keyboardRaised)
+    }
+
     property bool isPasswordField: false;
     property string titleBarIcon: "";
     property string titleBarText: "";

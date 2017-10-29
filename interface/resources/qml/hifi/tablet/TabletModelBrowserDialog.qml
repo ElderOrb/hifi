@@ -28,6 +28,12 @@ Item {
 
     property bool keyboardEnabled: false
     property bool keyboardRaised: false
+
+    onKeyboardRaisedChanged: { 
+        console.debug('TabletModelBrowserDialog.qml: onKeyboardRaisedChanged: ', keyboardRaised)
+    }
+
+
     property bool punctuationMode: false
 
     anchors.fill: parent

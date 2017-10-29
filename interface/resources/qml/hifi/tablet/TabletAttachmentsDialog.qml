@@ -23,6 +23,11 @@ Item {
 
     property bool keyboardEnabled: false
     property bool keyboardRaised: false
+
+    onKeyboardRaisedChanged: { 
+        console.debug('TabletAttachmentsDialog.qml: onKeyboardRaisedChanged: ', keyboardRaised)
+    }
+
     property bool punctuationMode: false
 
     signal sendToScript(var message);

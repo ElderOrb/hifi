@@ -31,6 +31,12 @@ Rectangle {
     signal sendToScript(var message);
     property bool keyboardEnabled: true  // FIXME - Keyboard HMD only: Default to false
     property bool keyboardRaised: false
+
+    onKeyboardRaisedChanged: { 
+        console.debug('WebBrowser.qml: onKeyboardRaisedChanged: ', keyboardRaised)
+    }
+
+
     property bool punctuationMode: false
 
 

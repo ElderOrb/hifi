@@ -25,6 +25,11 @@ Item {
 
     property bool keyboardEnabled: false
     property bool keyboardRaised: false
+
+    onKeyboardRaisedChanged: { 
+        console.debug('TabletAvatarBrowser.qml: onKeyboardRaisedChanged: ', keyboardRaised)
+    }
+
     property bool punctuationMode: false
 
     anchors.fill: parent

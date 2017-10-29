@@ -54,7 +54,10 @@ ModalWindow {
     property bool keyboardEnabled: false
     property bool keyboardRaised: false
     property bool punctuationMode: false
-    onKeyboardRaisedChanged: d.resize();
+    onKeyboardRaisedChanged: { 
+        console.debug('CustomQueryDialog.qml: onKeyboardRaisedChanged: ', keyboardRaised)
+        d.resize();
+    }
 
     property var warning: "";
     property var result;

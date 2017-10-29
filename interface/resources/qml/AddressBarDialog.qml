@@ -76,6 +76,10 @@ Window {
 
         property bool keyboardEnabled: false
         property bool keyboardRaised: false
+        onKeyboardRaisedChanged: {
+            console.debug('AddressBarDialog.qml: onKeyboardRaisedChanged: ', keyboardRaised)
+        }
+
         property bool punctuationMode: false
 
         implicitWidth: backgroundImage.width

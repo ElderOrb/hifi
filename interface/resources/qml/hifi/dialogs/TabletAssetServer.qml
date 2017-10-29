@@ -26,6 +26,10 @@ Rectangle {
     property string title: "Asset Browser"
     property bool keyboardRaised: false
 
+    onKeyboardRaisedChanged: { 
+        console.debug('TabletAssetServer.qml: onKeyboardRaisedChanged: ', keyboardRaised)
+    }
+
     signal sendToScript(var message);
     property bool isHMD: false
 

@@ -114,6 +114,10 @@ ModalWindow {
 
         property bool keyboardEnabled: false
         property bool keyboardRaised: false
+        onKeyboardRaisedChanged: {
+            console.debug('fileDialog.qml: onKeyboardRaisedChanged: ', keyboardRaised);
+        }
+
         property bool punctuationMode: false
 
         MouseArea {

@@ -196,6 +196,8 @@ Window {
     }
 
     onKeyboardRaisedChanged: {
+        console.debug('ScrollingWindow.qml: onKeyboardRaisedChanged: ', keyboardRaised)
+
         if (!keyboardOverride && keyboardEnabled && keyboardRaised) {
             var delta = activator.mouseY
                     - (activator.height + activator.y - keyboard.raisedHeight - footerContentHeight - hifi.dimensions.controlLineHeight);

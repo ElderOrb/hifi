@@ -108,6 +108,11 @@ Rectangle {
 
         property bool keyboardEnabled: false
         property bool keyboardRaised: false
+
+        onKeyboardRaisedChanged: { 
+            console.debug('TabletFileDialog.qml: onKeyboardRaisedChanged: ', keyboardRaised)
+        }
+
         property bool punctuationMode: false
 
         MouseArea {

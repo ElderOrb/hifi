@@ -29,6 +29,11 @@ Rectangle {
 
     property string activeView: "initialize";
     property bool keyboardRaised: false;
+
+    onKeyboardRaisedChanged: { 
+        console.debug('Wallet.qml: onKeyboardRaisedChanged: ', keyboardRaised)
+    }
+
     property bool isPassword: false;
 
     Image {

@@ -28,6 +28,12 @@ Windows.Window {
     // Keyboard control properties in case needed by QML content.
     property bool keyboardEnabled: false
     property bool keyboardRaised: false
+
+    onKeyboardRaisedChanged: { 
+        console.debug('QmlWindow.qml: onKeyboardRaisedChanged: ', keyboardRaised)
+    }
+
+
     property bool punctuationMode: false
 
     onSourceChanged: {

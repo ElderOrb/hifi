@@ -29,6 +29,10 @@ Window {
 
         property bool keyboardEnabled: false
         property bool keyboardRaised: true
+        onKeyboardRaisedChanged: {
+            console.debug('AvatarBrowser.qml: onKeyboardRaisedChanged: ', keyboardRaised);
+        }
+
         property bool punctuationMode: false
 
         BaseWebView {

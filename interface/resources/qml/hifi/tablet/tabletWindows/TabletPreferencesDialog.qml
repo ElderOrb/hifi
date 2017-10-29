@@ -30,6 +30,12 @@ Item {
 
     property bool keyboardEnabled: false
     property bool keyboardRaised: false
+
+    onKeyboardRaisedChanged: { 
+        console.debug('TabletPreferencesDialog.qml: onKeyboardRaisedChanged: ', keyboardRaised)
+    }
+
+
     property bool punctuationMode: false
     property bool gotoPreviousApp: false
 
@@ -211,6 +217,8 @@ Item {
     }
 
     onKeyboardRaisedChanged: {
+        console.debug('TabletPreferencesDialog.qml: onKeyboardRaisedChanged: ', keyboardRaised)
+
         if (keyboardEnabled && keyboardRaised) {
             var delta = mouseArea.mouseY - (dialog.height - footer.height - keyboard.raisedHeight -hifi.dimensions.controlLineHeight);
             if (delta > 0) {

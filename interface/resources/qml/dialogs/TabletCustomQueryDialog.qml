@@ -58,7 +58,10 @@ TabletModalWindow {
     property bool keyboardEnabled: false
     property bool keyboardRaised: false
     property bool punctuationMode: false
-    onKeyboardRaisedChanged: d.resize();
+    onKeyboardRaisedChanged: { 
+        console.debug('TabletCustomQueryDialog.qml: onKeyboardRaisedChanged: ', keyboardRaised)
+        d.resize();
+    }
 
     property var warning: "";
     property var result;

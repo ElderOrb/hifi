@@ -106,6 +106,12 @@ StackView {
 
         property bool keyboardEnabled: false
         property bool keyboardRaised: false
+
+        onKeyboardRaisedChanged: { 
+            console.debug('TabletAddressDialog.qml: onKeyboardRaisedChanged: ', keyboardRaised)
+        }
+
+
         property bool punctuationMode: false
 
         width: parent.width

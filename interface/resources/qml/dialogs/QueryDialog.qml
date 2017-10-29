@@ -50,7 +50,10 @@ ModalWindow {
     property bool keyboardRaised: false
     property bool punctuationMode: false
 
-    onKeyboardRaisedChanged: d.resize();
+    onKeyboardRaisedChanged: { 
+        console.debug('QueryDialog.qml: onKeyboardRaisedChanged: ', keyboardRaised)
+        d.resize();
+    }
 
     function updateIcon() {
         if (!root) {
