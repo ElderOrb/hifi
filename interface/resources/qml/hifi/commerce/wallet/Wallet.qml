@@ -183,9 +183,11 @@ Rectangle {
                 } else if (msg.method === 'walletSetup_raiseKeyboard') {
                     root.keyboardRaised = true;
                     root.isPassword = msg.isPasswordField;
+                    keyboard.mirroredText = '';
                 } else if (msg.method === 'walletSetup_lowerKeyboard') {
                     root.keyboardRaised = false;
                     root.isPassword = msg.isPasswordField;
+                    keyboard.mirroredText = '';
                 } else {
                     sendToScript(msg);
                 }
