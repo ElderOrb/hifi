@@ -418,7 +418,10 @@ void TabletProxy::setQmlTabletRoot(OffscreenQmlSurface* qmlOffscreenSurface) {
 
         if (_initialScreen) {
             if (!_showRunningScripts && _initialPath.second == State::QML) {
-                pushOntoStack(_initialPath.first);
+                auto path = _initialPath.first;
+                QTimer::singleShot(0, [this, path] { // delay pushing a bit to allow tablet to get proper geometry
+                    pushOntoStack(path);
+                });
             } else if (_initialPath.second == State::Web) {
                 QVariant webUrl = _initialPath.first;
                 QVariant scriptUrl = _initialWebPathParams.first;
