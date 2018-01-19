@@ -872,9 +872,20 @@ void OffscreenQmlSurface::loadInternal(const QUrl& qmlSource, bool createNewCont
     QMetaObject::invokeMethod(qApp, "updateHeartbeat", Qt::DirectConnection);
 
     QUrl finalQmlSource = qmlSource;
-    if ((qmlSource.isRelative() && !qmlSource.isEmpty()) || qmlSource.scheme() == QLatin1String("file")) {
-        finalQmlSource = _qmlContext->resolvedUrl(qmlSource);
+
+    // this ugly hack is attempt to simplify life of external script developers who could occasionally make path like this:
+    // var MARKETPLACE_WALLET_QML_PATH = Script.resourcesPath() + "qml/hifi/commerce/wallet/Wallet.qml";
+    // the logic below tries to rebuild url
+    static auto localResourceQmlUrlString = QUrl::fromLocalFile(PathUtils::resourcesPath() + "qml/").toString();
+    if (finalQmlSource.toString().startsWith(localResourceQmlUrlString, Qt::CaseInsensitive)) {
+        finalQmlSource = PathUtils::qmlBasePath() + finalQmlSource.toString().remove(0, localResourceQmlUrlString.length());
     }
+
+    qDebug() << "qmlSource: " << finalQmlSource;
+    if ((finalQmlSource.isRelative() && !finalQmlSource.isEmpty()) || finalQmlSource.scheme() == QLatin1String("file")) {
+        finalQmlSource = _qmlContext->resolvedUrl(finalQmlSource);
+    }
+    qDebug() << "finalQmlSource qmlSource: " << finalQmlSource;
 
     auto targetContext = contextForUrl(finalQmlSource, parent, createNewContext);
     auto qmlComponent = new QQmlComponent(_qmlContext->engine(), finalQmlSource, QQmlComponent::PreferSynchronous);
