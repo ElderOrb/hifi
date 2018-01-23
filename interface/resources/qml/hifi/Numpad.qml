@@ -151,6 +151,58 @@ Rectangle {
                             color: 'black'
                             opacity: itemOpacity
 
+                            function getRotationAngle() {
+
+                                var revision = dragArea.selectedItemsRevision;
+                                var nextIndex = nextItemIndex();
+                                if(nextIndex === -1)
+                                    return 0;
+
+                                var nextItem = gridView.model.get(nextIndex);
+
+                                var normalizedConnectionVector =  Qt.vector2d(nextItem.x, nextItem.y).minus(Qt.vector2d(delegate.x, delegate.y)).normalized();
+                                var normalizedXAxisVector = Qt.vector2d(1, 0).normalized();
+
+                                var cos = normalizedConnectionVector.dotProduct(normalizedXAxisVector);
+                                var angle = Math.acos(cos) * (180 / Math.PI);
+
+                                if(angle === 90) {
+                                    if(normalizedConnectionVector.y < 0)
+                                        angle += 180
+                                }
+
+                                return angle;
+                            }
+
+                            rotation: {
+                                var angle = getRotationAngle();
+                                console.debug('angle: ', angle)
+                                return angle;
+                            }
+
+                            function nextItemIndex() {
+
+                                var revision = dragArea.selectedItemsRevision;
+                                var indexOfIndex = dragArea.selectedItems.indexOf(index);
+                                if(indexOfIndex === -1)
+                                    return -1
+
+                                if(indexOfIndex >= (dragArea.selectedItems.length - 1))
+                                    return -1
+
+                                return dragArea.selectedItems[indexOfIndex + 1]
+                            }
+
+                            Text {
+                                anchors.right: outerCircle.right
+                                anchors.verticalCenter: outerCircle.verticalCenter
+                                color: highlightColor
+                                font.bold: true
+                                font.pointSize: outerRadius / 3
+                                text: ">"
+                                visible: parent.nextItemIndex() !== -1
+                            }
+
                             Rectangle {
                                 id: circle
 
@@ -288,6 +340,7 @@ Rectangle {
             }
 
             property var selectedItems: []
+            property var selectedItemsRevision: 0
 
             Timer {
                 id: selectionTimer
@@ -298,6 +351,7 @@ Rectangle {
 
                     gridView.model.get(parent.selectionCandidateIndex).selected = true;
                     parent.selectedItems.push(parent.selectionCandidateIndex);
+                    parent.selectedItemsRevision++;
 
                     dragHandle.adjustToCenter(gridView.model.get(parent.selectionCandidateIndex))
                     dragHandle.updateAllowedTargets(parent.selectionCandidateIndex)
@@ -334,13 +388,13 @@ Rectangle {
                     var modelIndex = gridView.indexAt(mouse.x, mouse.y)
                     var modelItem = gridView.model.get(modelIndex);
 
-                    selectionCandidateIndex = modelItem.index
+                    var selectionIndex = modelItem.index
 
-                    gridView.model.get(selectionCandidateIndex).selected = true
-                    selectedItems.push(selectionCandidateIndex);
+                    gridView.model.get(selectionIndex).selected = true
+                    selectedItems.push(selectionIndex);
 
-                    dragHandle.adjustToCenter(gridView.model.get(selectionCandidateIndex))
-                    dragHandle.updateAllowedTargets(selectionCandidateIndex)
+                    dragHandle.adjustToCenter(gridView.model.get(selectionIndex))
+                    dragHandle.updateAllowedTargets(selectionIndex)
 
                     dragging = true;
                 }
