@@ -7,8 +7,6 @@ Rectangle {
     id: root
 
     property int buttonAreaHeight: 50
-
-
     property color centerColor: 'lightGray'
 
     property int itemRadius: 50
@@ -17,15 +15,56 @@ Rectangle {
 
     property color pointerColor: 'lightBlue'
     property color highlightColor: 'lime green'
-    property color highlightItemColor: 'transparent'
+    property color highlightItemColor: 'lime green'
     property double itemOpacity: 0.8
 
     property int itemsCount: 10
     property int columnsCount: 3
     property int rowsCount: Math.ceil(itemsCount / columnsCount);
 
-    property color allowedPositionHighlightColor: Qt.rgba(0, 0.5, 0, 0.5)
-    property int allowedPositionHightlightRadius: 4
+    property color allowedTargetIndicatorColor: 'black'
+    property int allowedTargetIndicatorRadius : 4
+
+    // implementation
+    property var allowedTargets: []
+    property int selectedItemIndex: -1
+    property var selectedItems: []
+
+    function updateAllowedTargets(modelIndex) {
+        // console.debug('updating allowed positions for modelIndex: ', modelIndex)
+
+        var newAllowedTargets = [];
+
+        var count = gridView.model.count
+        var row = Math.floor(modelIndex / columnsCount);
+        var column = modelIndex % columnsCount;
+
+        for(var r = Math.max(row - 1, 0); r <= Math.min(row + 1, rowsCount - 1); ++r) {
+            for(var c = Math.max(column - 1, 0); c <= Math.min(column + 1, columnsCount - 1); ++c) {
+                if(r === row && c === column) {
+                    continue; // skip self
+                }
+
+                var index  = r * columnsCount + c;
+                if(index >= count) {
+                    break;
+                }
+
+                var targetItem = gridView.model.get(index)
+                if(!targetItem.selected) {
+                    newAllowedTargets.push(targetItem);
+                }
+            }
+        }
+
+        for(var i = 0; i < newAllowedTargets.length; ++i) {
+            console.debug('allowed: ', newAllowedTargets[i])
+        }
+
+        allowedTargets = newAllowedTargets;
+    }
+
+
 
     gradient: Gradient {
         GradientStop {
@@ -42,7 +81,6 @@ Rectangle {
             position: 1
             color: "#58563e"
         }
-
     }
 
     Item {
@@ -54,13 +92,11 @@ Rectangle {
             anchors.fill: parent
 
             onPaint: {
-                // console.debug('paint: start = ', start, 'end = ', end)
 
                 var ctx = getContext("2d")
-
                 ctx.reset();
 
-                if(selectedItems.length != 0) {
+                if(selectedItems.length !== 0) {
                     ctx.beginPath()
                     ctx.strokeStyle = centerColor
                     ctx.lineCap = 'round'
@@ -92,18 +128,13 @@ Rectangle {
                 ctx.stroke()
             }
 
-            onStartChanged: {
-                // console.debug('start = ', start, 'end = ', end)
-            }
-
-            property point start: dragHandle.start
+            property point start: selectedItemIndex === -1 ? Qt.point(0, 0) : gridView.model.get(selectedItemIndex).getCenter()
             property point end: dragHandle.getCenter()
             onEndChanged: {
-                // console.debug('start = ', start, 'end = ', end)
                 requestPaint();
             }
 
-            property var selectedItems: dragArea.selectedItems
+            property var selectedItems: root.selectedItems
             onSelectedItemsChanged: {
                 requestPaint();
             }
@@ -133,12 +164,9 @@ Rectangle {
 
                         function containsMouse(pos) {
 
-                            var localPos = mapFromItem(null, pos.x, pos.y)
-                            var outerCirclePos = mapToItem(outerCircle, localPos.x, localPos.y)
-
-                            console.debug('containsMouse: ', localPos, outerCirclePos)
-                            var containsResult = outerCircle.contains(outerCirclePos)
-                            console.debug('contains: ', containsResult)
+                            var localPos = mapFromItem(null, pos.x, pos.y);
+                            var outerCirclePos = mapToItem(outerCircle, localPos.x, localPos.y);
+                            var containsResult = outerCircle.contains(outerCirclePos);
 
                             return containsResult;
                         }
@@ -149,7 +177,6 @@ Rectangle {
 
                         function getRotationAngle() {
 
-                            var revision = dragArea.selectedItemsRevision;
                             var nextIndex = nextItemIndex();
                             if(nextIndex === -1)
                                 return 0;
@@ -171,16 +198,14 @@ Rectangle {
                         }
 
                         function nextItemIndex() {
-
-                            var revision = dragArea.selectedItemsRevision;
-                            var indexOfIndex = dragArea.selectedItems.indexOf(index);
+                            var indexOfIndex = selectedItems.indexOf(index);
                             if(indexOfIndex === -1)
                                 return -1
 
-                            if(indexOfIndex >= (dragArea.selectedItems.length - 1))
+                            if(indexOfIndex >= (selectedItems.length - 1))
                                 return -1
 
-                            return dragArea.selectedItems[indexOfIndex + 1]
+                            return selectedItems[indexOfIndex + 1]
                         }
 
                         Rectangle {
@@ -221,6 +246,21 @@ Rectangle {
                                 radius: innerRadius
                                 color: centerColor
                                 opacity: itemOpacity
+
+                                Rectangle {
+                                    id: allowedTargetIndicator
+                                    anchors.centerIn: parent
+
+                                    width: allowedTargetIndicatorRadius * 2
+                                    height: allowedTargetIndicatorRadius * 2
+                                    radius: allowedTargetIndicatorRadius
+                                    color: allowedTargetIndicatorColor
+
+                                    visible: {
+                                        var isAllowed = allowedTargets.indexOf(delegate) !== -1
+                                        return isAllowed
+                                    }
+                                }
                             }
 
                             Text {
@@ -253,78 +293,6 @@ Rectangle {
             }
         }
 
-        Canvas {
-            id: overlay
-            anchors.fill: parent
-
-            property point start: dragHandle.start
-            property point end: dragHandle.getCenter()
-            onEndChanged: {
-                // console.debug('start = ', start, 'end = ', end)
-                requestPaint();
-            }
-
-            property var allowedItems: dragHandle.allowedTargets
-            onAllowedItemsChanged: {
-                requestPaint();
-            }
-
-            onPaint: {
-
-                var ctx = getContext("2d")
-                ctx.reset();
-                ctx.beginPath()
-
-                for(var i = 0; i < allowedItems.length; ++i) {
-                    var allowedItem = allowedItems[i];
-                    var allowedPosition = allowedItem.getCenter();
-
-                    ctx.strokeStyle = allowedPositionHighlightColor
-                    ctx.lineCap = 'round'
-                    ctx.lineWidth = innerRadius * 2
-
-                    var x = allowedPosition.x - allowedPositionHightlightRadius / 2
-                    var y = allowedPosition.y - allowedPositionHightlightRadius / 2
-
-                    ctx.ellipse(x, y, allowedPositionHightlightRadius, allowedPositionHightlightRadius)
-                    ctx.fill()
-                }
-
-                /*
-
-                if(!dragArea.dragging)
-                    return
-
-                ctx.beginPath()
-                ctx.strokeStyle = pointerColor
-                ctx.lineCap = 'round'
-                ctx.lineWidth = innerRadius * 2
-                ctx.moveTo(start.x, start.y)
-                ctx.lineTo(end.x, end.y)
-                ctx.stroke()
-                */
-
-                /*
-                var ctx = getContext("2d")
-
-                ctx.reset();
-
-                if(itemRect != Qt.rect(0, 0, 0, 0)) {
-                    ctx.beginPath()
-                    ctx.fillStyle = Qt.rgba(0.3, 0.3, 0.3, 0.7)
-                    ctx.fillRect(itemRect.x, itemRect.y, itemRect.width, itemRect.height);
-                    ctx.closePath()
-                }
-                */
-            }
-
-            property rect itemRect: Qt.rect(0, 0, 0, 0);
-            onItemRectChanged: {
-                // console.debug('rect = ', itemRect);
-                requestPaint();
-            }
-        }
-
         MouseArea {
             id: dragArea
             anchors.fill: parent
@@ -337,33 +305,34 @@ Rectangle {
                 dragging = false;
             }
 
-            property int selectedItemIndex;
-            property var selectedItems: []
-            property var selectedItemsRevision: 0
+            function selectItem(item) {
+                selectedItemIndex = item.index
+                item.selected = true;
+
+                var newSelectedItems = selectedItems.slice(); // this is required to make bindings work
+                newSelectedItems.push(selectedItemIndex);
+                selectedItems = newSelectedItems;
+
+                dragHandle.adjustToCenter(item)
+                updateAllowedTargets(selectedItemIndex)
+            }
 
             onPositionChanged: {
                 var centerOfDragItem = dragHandle.getCenter();
                 var item = gridView.itemAt(centerOfDragItem.x, centerOfDragItem.y)
 
                 if(item && item.containsMouse(mapToItem(null, centerOfDragItem.x, centerOfDragItem.y))) {
-                    if (dragHandle.allowedTargets.indexOf(item) === -1) {
+                    if (allowedTargets.indexOf(item) === -1) {
                         return;
                     }
 
                     if(!item.selected) {
                         if(selectedItemIndex !== item.index) {
-                            selectedItemIndex = item.index
-
-                            item.selected = true;
-                            selectedItems.push(selectedItemIndex);
-                            selectedItemsRevision++;
-
-                            dragHandle.adjustToCenter(item)
-                            dragHandle.updateAllowedTargets(selectedItemIndex)
+                            selectItem(item)
                         }
                     }
                 } else {
-                    selectedItemIndex = -1
+                    selectedItemIndex = selectedItems.length !== 0 ? selectedItems.slice(-1)[0] : -1
                 }
             }
 
@@ -372,17 +341,7 @@ Rectangle {
                 console.debug('pressed: ', mouse.x, mouse.y, 'global: ', dragArea.mapToGlobal(mouse.x, mouse.y), 'window: ', dragArea.mapToItem(null, mouse.x, mouse.y))
 
                 if(item && item.containsMouse(mapToItem(null, mouse.x, mouse.y))) {
-                    var modelIndex = gridView.indexAt(mouse.x, mouse.y)
-                    var modelItem = gridView.model.get(modelIndex);
-
-                    var selectionIndex = modelItem.index
-
-                    gridView.model.get(selectionIndex).selected = true
-                    selectedItems.push(selectionIndex);
-
-                    dragHandle.adjustToCenter(gridView.model.get(selectionIndex))
-                    dragHandle.updateAllowedTargets(selectionIndex)
-
+                    selectItem(item)
                     dragging = true;
                 }
             }
@@ -394,7 +353,6 @@ Rectangle {
             function adjustToCenter(item) {
                 var rect = item.mapToItem(gridView, 0, 0, item.width, item.height)
 
-                overlay.itemRect = rect
                 // console.debug('adjust to center of ', item);
 
                 var centerX = rect.x + rect.width / 2
@@ -402,51 +360,13 @@ Rectangle {
 
                 x = rect.x + (rect.width - width) / 2
                 y = rect.y + (rect.height - height) / 2
-
-                // console.debug('adjust to center: x = ', x, 'y = ', y);
-
-                start = Qt.point(centerX, centerY);
             }
 
             function getCenter() {
                 return Qt.point(x + width / 2, y + height / 2)
             }
 
-            property point start;
             property point lastMousePos;
-            property var allowedTargets: []
-
-            function updateAllowedTargets(modelIndex) {
-                // console.debug('updating allowed positions for modelIndex: ', modelIndex)
-
-                allowedTargets = [];
-
-                var count = gridView.model.count
-                var row = Math.floor(modelIndex / columnsCount);
-                var column = modelIndex % columnsCount;
-
-                for(var r = Math.max(row - 1, 0); r <= Math.min(row + 1, rowsCount - 1); ++r) {
-                    for(var c = Math.max(column - 1, 0); c <= Math.min(column + 1, columnsCount - 1); ++c) {
-                        if(r === row && c === column) {
-                            continue; // skip self
-                        }
-
-                        var index  = r * columnsCount + c;
-                        if(index >= count) {
-                            break;
-                        }
-
-                        var targetItem = gridView.model.get(index)
-                        if(!targetItem.selected) {
-                            allowedTargets.push(targetItem);
-                        }
-                    }
-                }
-
-                for(var i = 0; i < allowedTargets.length; ++i) {
-                    console.debug('allowed: ', allowedTargets[i])
-                }
-            }
 
             property point invalidTarget: Qt.point(-1, -1)
             property point target: invalidTarget
@@ -470,15 +390,12 @@ Rectangle {
             anchors.horizontalCenter: parent.horizontalCenter
             text: "X";
             onClicked: {
-                dragHandle.start = Qt.point(0, 0);
-                dragHandle.allowedTargets = []
-                dragArea.selectedItems = []
-                dragArea.selectedItemIndex = -1
+                allowedTargets = []
+                selectedItems = []
+                selectedItemIndex = -1
 
                 for(var i = 0; i < gridView.model.count; ++i)
                     gridView.model.get(i).selected = false
-
-                overlay.itemRect = Qt.rect(0, 0, 0, 0)
             }
         }
     }
