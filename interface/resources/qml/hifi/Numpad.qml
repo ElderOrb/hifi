@@ -35,33 +35,41 @@ Rectangle {
 
         var newAllowedTargets = [];
 
-        var count = gridView.model.count
+        var count = gridView.model.count;
         var row = Math.floor(modelIndex / columnsCount);
         var column = modelIndex % columnsCount;
 
-        for(var r = Math.max(row - 1, 0); r <= Math.min(row + 1, rowsCount - 1); ++r) {
-            for(var c = Math.max(column - 1, 0); c <= Math.min(column + 1, columnsCount - 1); ++c) {
+        for(var r = 0; r < rowsCount; ++r) {
+            for(var c = 0; c < columnsCount; ++c) {
                 if(r === row && c === column) {
                     continue; // skip self
                 }
 
                 var index  = r * columnsCount + c;
-                if(index >= count) {
-                    break;
-                }
+                var targetItem = gridView.model.get(index);
 
-                var targetItem = gridView.model.get(index)
-                if(!targetItem.selected) {
-                    newAllowedTargets.push(targetItem);
+                if(Math.abs(r - row) <= 1 && Math.abs(c - column) <= 1) { // close item
+                    if(!targetItem.selected) {
+                        newAllowedTargets.push(targetItem);
+                    }
+                } else {
+                    if((c == column && r !== row) || // the same row
+                       (r == row && c != column) || // the same column
+                       (Math.abs(r - row) === Math.abs(c - column)) // the same diagonal
+                    ) {
+                        continue;
+                    }
+
+                    if(!targetItem.selected) {
+                        newAllowedTargets.push(targetItem);
+                    }
                 }
             }
         }
 
-        /*
         for(var i = 0; i < newAllowedTargets.length; ++i) {
-            console.debug('allowed: ', newAllowedTargets[i])
+            console.debug('allowed: ', newAllowedTargets[i]);
         }
-        */
 
         allowedTargets = newAllowedTargets;
     }
