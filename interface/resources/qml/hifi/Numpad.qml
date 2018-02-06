@@ -27,8 +27,11 @@ Rectangle {
 
     // implementation
     property var allowedTargets: []
-    property int selectedItemIndex: -1
     property var selectedItemsIndexes: []
+
+    function lastSelectedItemIndex() {
+        return selectedItemsIndexes.slice(-1)[0];
+    }
 
     function updateAllowedTargets(modelIndex) {
         // console.debug('updating allowed positions for modelIndex: ', modelIndex)
@@ -171,16 +174,18 @@ Rectangle {
                 if(!dragArea.pressed)
                     return
 
-                ctx.beginPath()
-                ctx.strokeStyle = pointerColor
-                ctx.lineCap = 'round'
-                ctx.lineWidth = innerRadius * 2
-                ctx.moveTo(start.x, start.y)
-                ctx.lineTo(end.x, end.y)
-                ctx.stroke()
+                if(allowedTargets.length !== 0) {
+                    ctx.beginPath()
+                    ctx.strokeStyle = pointerColor
+                    ctx.lineCap = 'round'
+                    ctx.lineWidth = innerRadius * 2
+                    ctx.moveTo(start.x, start.y)
+                    ctx.lineTo(end.x, end.y)
+                    ctx.stroke()
+                }
             }
 
-            property point start: selectedItemIndex === -1 ? Qt.point(0, 0) : gridView.model.get(selectedItemIndex).getCenter()
+            property point start: selectedItemsIndexes.length === 0 ? Qt.point(0, 0) : gridView.model.get(lastSelectedItemIndex()).getCenter()
             property point end: dragHandle.getCenter()
             onEndChanged: {
                 requestPaint();
@@ -339,84 +344,88 @@ Rectangle {
         MouseArea {
             id: dragArea
             anchors.fill: parent
-
+            preventStealing: true
             property var mousePosDuringSelection: Qt.point(0, 0)
 
             function selectItem(item, mouse) {
+                console.debug('selecting item: ', item.number)
+
                 mousePosDuringSelection = Qt.point(mouse.x, mouse.y)
-                selectedItemIndex = item.index
                 item.selected = true;
 
                 var newSelectedItems = selectedItemsIndexes.slice(); // this is required to make bindings work
-                newSelectedItems.push(selectedItemIndex);
+                newSelectedItems.push(item.index);
                 selectedItemsIndexes = newSelectedItems;
 
                 dragHandle.adjustToCenter(item)
-                updateAllowedTargets(selectedItemIndex)
+                updateAllowedTargets(item.index)
+            }
+
+            function maybeSelectItem(item, mouse) {
+                if (selectedItemsIndexes.length === 0 || (allowedTargets.indexOf(item) !== -1 && !item.selected && lastSelectedItemIndex() !== item.index)) {
+                    selectItem(item, mouse)
+                }
             }
 
             onPositionChanged: {
-                var centerOfDragItem = dragHandle.getCenter();
-                var item = gridView.itemAt(centerOfDragItem.x, centerOfDragItem.y)
-
-                if(item && item.containsMouse(mapToItem(null, centerOfDragItem.x, centerOfDragItem.y))) {
-                    if (allowedTargets.indexOf(item) !== -1 && !item.selected && selectedItemIndex !== item.index) {
-                        selectItem(item, mouse)
-                    }
-                } else {
-                    selectedItemIndex = selectedItemsIndexes.length !== 0 ? selectedItemsIndexes.slice(-1)[0] : -1
-                }
-
-                if(allowedTargets.length === 0) {
-                    return;
-                }
-
-                if(selectedItemsIndexes.length > 1) {
-
-                    var previousSelectedPos = gridView.model.get(selectedItemsIndexes[selectedItemsIndexes.length - 2]).getCenter();
-                    var currentSelectedPos = gridView.model.get(selectedItemsIndexes[selectedItemsIndexes.length - 1]).getCenter();
-
-                    var selectedDirection = Qt.vector2d(currentSelectedPos.x - previousSelectedPos.x, currentSelectedPos.y - previousSelectedPos.y);
-                    var mouseDirection = Qt.vector2d(mouse.x - previousSelectedPos.x, mouse.y - previousSelectedPos.y);
-
-                    var cos = selectedDirection.dotProduct(mouseDirection) / (selectedDirection.length() * mouseDirection.length());
-                    var angle = toDegree(Math.acos(cos));
-
+                if(selectedItemsIndexes.length > 0) {
                     var candidate = getBestCandidate(mouse)
                     if(candidate !== null) {
                         var initialDistanceToCandidate = Qt.vector2d(mousePosDuringSelection.x, mousePosDuringSelection.y).minus(Qt.vector2d(candidate.center.x, candidate.center.y)).length();
                         // console.debug('candidate angle: ', candidate.angle, 'candidate distance: ', candidate.distance, 'initial distance: ', initialDistanceToCandidate);
 
-                        if(candidate.angle > 90)
+                        if(candidate.angle > 90) {
                             return;
+                        }
 
-                        if(candidate.distance >= initialDistanceToCandidate)
+                        if(candidate.distance >= initialDistanceToCandidate) {
                             return;
+                        }
 
-                        if(snapToPath.checked)
+                        if(snapToPath.checked) {
                             dragHandle.adjustToAllowedPath(mouse, candidate)
-                        else
+                        } else {
                             dragHandle.moveCenter(mouse)
+                        }
                     }
                 } else {
                     dragHandle.moveCenter(mouse)
                 }
+
+                var centerOfDragItem = dragHandle.getCenter();
+                var item = gridView.itemAt(centerOfDragItem.x, centerOfDragItem.y)
+
+                if(item && item.containsMouse(mapToItem(null, centerOfDragItem.x, centerOfDragItem.y))) {
+                    maybeSelectItem(item, mouse)
+                }
             }
 
             onPressed: {
+                console.debug('mouse area: pressed');
+
+                dragHandle.moveCenter(mouse)
                 var item = gridView.itemAt(mouse.x, mouse.y)
                 console.debug('pressed: ', mouse.x, mouse.y, 'global: ', dragArea.mapToGlobal(mouse.x, mouse.y), 'window: ', dragArea.mapToItem(null, mouse.x, mouse.y))
 
                 if(item && item.containsMouse(mapToItem(null, mouse.x, mouse.y))) {
-                    selectItem(item, mouse)
+                    maybeSelectItem(item, mouse)
                 }
+
+                connections.requestPaint();
+                console.debug('mouse area: end pressed');
+            }
+
+            onReleased: {
+                console.debug('mouse area: released');
+                connections.requestPaint();
+                console.debug('mouse area: end released');
             }
         }
 
         Rectangle {
             id: dragHandle
 
-            visible: selectedItemIndex !== -1
+            visible: selectedItemsIndexes.length !== 0 && selectedItemsIndexes.length !== itemsCount && dragArea.pressed
 
             function isCenteredIn(item) {
                 var rect = item.mapToItem(gridView, 0, 0, item.width, item.height)
@@ -466,7 +475,7 @@ Rectangle {
                 moveCenter(Qt.point(newX, newY))
             }
 
-            color: dragArea.pressed ? dragHandleItemColor : 'transparent'
+            color: dragHandleItemColor
             height: 40
             width: 40
             radius: 20
@@ -517,7 +526,6 @@ Rectangle {
                 onClicked: {
                     allowedTargets = []
                     selectedItemsIndexes = []
-                    selectedItemIndex = -1
 
                     for(var i = 0; i < gridView.model.count; ++i)
                         gridView.model.get(i).selected = false
