@@ -19,6 +19,7 @@ var DEFAULT_SCRIPTS_COMBINED = [
     "system/hmd.js",
     "system/menu.js",
     "system/bubble.js",
+    "system/dance.js",
     "system/snapshot.js",
     "system/pal.js", // "system/mod.js", // older UX, if you prefer
     "system/avatarapp.js",
