@@ -705,6 +705,9 @@ window.onload = function () {
                         setPrintButtonEnabled();
                     }
                     break;
+                case 'snapshotUploadFailed':
+                    setPrintButtonDisabled();
+                    break;
                 default:
                     console.log("Unknown message action received in SnapshotReview.js.");
                     break;

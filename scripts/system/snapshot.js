@@ -413,6 +413,10 @@ function snapshotUploaded(isError, reply) {
         }
     } else {
         print(reply);
+        tablet.emitScriptEvent(JSON.stringify({
+            type: "snapshot",
+            action: "snapshotUploadFailed"
+        }));
     }
     isUploadingPrintableStill = false;
 }
