@@ -657,6 +657,24 @@ void OffscreenQmlSurface::lowerKeyboard() {
     }
 }
 
+QQuickItem* findNearestKeyboard(QQuickItem *focusItem) {
+    auto item = focusItem;
+
+    int level = 0;
+    while (item) {
+        qDebug() << QString(level, ' ') + "item: " << item;
+
+        auto keyboard = item->findChild<QQuickItem*>(QString("keyboard"));
+        if (keyboard)
+            return keyboard;
+
+        item = item->parentItem();
+        ++level;
+    }
+
+    return nullptr;
+}
+
 void OffscreenQmlSurface::setKeyboardRaised(QObject* object, bool raised, bool numeric, bool passwordField) {
     qCDebug(uiLogging) << "setKeyboardRaised: " << object << ", raised: " << raised << ", numeric: " << numeric
                        << ", password: " << passwordField;
@@ -666,6 +684,36 @@ void OffscreenQmlSurface::setKeyboardRaised(QObject* object, bool raised, bool n
     }
 
 #if !defined(Q_OS_ANDROID)
+
+    auto focusObject = object;
+    auto root = getRootItem();
+    qDebug() << "root: " << root << "objectName: " << root->objectName();
+
+    auto thekeyboard = root->findChild<QQuickItem*>(QString("virtualkeyboard"));
+    assert(thekeyboard);
+
+    if (!thekeyboard) {
+        qWarning("no 'virtualkeyboard' found!");
+        return;
+    }
+
+    auto quickItem = qobject_cast<QQuickItem*>(focusObject);
+    if (quickItem && quickItem->hasActiveFocus())
+    {
+        auto keyboard = findNearestKeyboard(qobject_cast<QQuickItem*> (focusObject));
+        qDebug() << "focusObject: " << focusObject;
+
+        if (keyboard) {
+            thekeyboard->setParentItem(keyboard);
+            thekeyboard->setVisible(true);
+
+            return;
+        }
+    }
+
+    thekeyboard->setVisible(false);
+
+	/*
     // if HMD is being worn, allow keyboard to open.  allow it to close, HMD or not.
     if (!raised || qApp->property(hifi::properties::HMD).toBool()) {
         QQuickItem* item = dynamic_cast<QQuickItem*>(object);
@@ -701,6 +749,8 @@ void OffscreenQmlSurface::setKeyboardRaised(QObject* object, bool raised, bool n
             item = dynamic_cast<QQuickItem*>(item->parentItem());
         }
     }
+    */
+
 #endif
 }
 

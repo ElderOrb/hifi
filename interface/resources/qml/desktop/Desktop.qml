@@ -12,6 +12,7 @@ import QtQuick 2.7
 import QtQuick.Controls 1.4
 import QtQuick.Controls 2.3 as QQC2
 
+import "../controls-uit"
 import "../dialogs"
 import "../js/Utils.js" as Utils
 
@@ -20,6 +21,11 @@ FocusScope {
     id: desktop
     objectName: "desktop"
     anchors.fill: parent
+
+	VirtualKeyboard {
+        id: vk
+        parent: null
+    }
 
     readonly property int invalid_position: -9999;
     property rect recommendedRect: Qt.rect(0,0,0,0);
