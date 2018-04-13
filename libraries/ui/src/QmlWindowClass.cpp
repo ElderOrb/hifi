@@ -282,6 +282,7 @@ void QmlWindowClass::setKeyboardRaised(QObject* object, bool raised, bool numeri
 
         if (keyboard) {
             thekeyboard->setProperty("raised", true);
+            thekeyboard->setProperty("numeric", numeric);
             thekeyboard->setParentItem(keyboard);
 
             qDebug() << "attaching keyboard to placeholder...";

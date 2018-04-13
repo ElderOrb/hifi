@@ -22,9 +22,13 @@ Rectangle {
         if(parent != null) {
             anchors.left = Qt.binding(function() { return parent.left });
             anchors.right = Qt.binding(function() { return parent.right });
+            numeric = Qt.binding(function() { return parent.numeric });
+            password = Qt.binding(function() { return parent.password });
         } else {
             anchors.left = undefined;
             anchors.right = undefined;
+            numeric = false;
+            password = false;
         }
     }
 

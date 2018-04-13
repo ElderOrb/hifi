@@ -709,13 +709,17 @@ static void outputParents(QQuickItem* item) {
     }
 }
 
-static QQuickItem* findNearestKeyboard(QQuickItem *focusItem) {
+static QQuickItem* findNearestKeyboard(QQuickItem *focusItem, QQuickItem** keyboardContainer = nullptr) {
 
     QQuickItem* item = focusItem;
     QQuickItem* visited = nullptr;
 
     while (item) {
         if (item->property("keyboardRaised").isValid()) {
+
+            if (keyboardContainer)
+                *keyboardContainer = item;
+
             if (item->property("keyboardContainer").isValid()) {
                 return qvariant_cast<QQuickItem*> (item->property("keyboardContainer"));
             }
@@ -745,6 +749,67 @@ static QQuickItem* findNearestKeyboard(QQuickItem *focusItem) {
     }
 
     return nullptr;
+}
+
+void OffscreenQmlSurface::setKeyboardRaised(QObject* object, bool raised) {
+    qCDebug(uiLogging) << "setKeyboardRaised: " << object << ", raised: " << raised;
+
+    if (!object) {
+        return;
+    }
+
+#if !defined(Q_OS_ANDROID)
+
+    auto focusObject = object;
+    auto root = getRootItem();
+    qDebug() << "root: " << root << "objectName: " << root->objectName();
+
+    auto thekeyboard = root->findChild<QQuickItem*>(QString("virtualkeyboard"));
+    assert(thekeyboard);
+
+    if (!thekeyboard) {
+        qWarning() << "no 'virtualkeyboard' found!" << root << root->parent();
+        return;
+    }
+
+    auto quickItem = qobject_cast<QQuickItem*>(focusObject);
+    if (quickItem && raised)
+    {
+        QQuickItem* keyboardContainer = nullptr;
+        auto keyboard = findNearestKeyboard(qobject_cast<QQuickItem*> (focusObject), &keyboardContainer);
+        qDebug() << "focusObject: " << focusObject;
+
+        if (keyboard) {
+            qDebug() << "keyboard found: " << keyboard << "parent: " << keyboard->parent();
+
+            auto item = quickItem;
+            bool numeric = false;
+
+            while (item != keyboardContainer) {
+                numeric = numeric || QString(item->metaObject()->className()).left(7) == "SpinBox";
+                item = item->parentItem();
+            }
+
+            if (keyboardContainer->property("punctuationMode").isValid()) {
+                keyboardContainer->setProperty("punctuationMode", numeric);
+            }
+
+            /*
+            if (keyboardContainer->property("passwordField").isValid()) {
+                keyboardContainer->setProperty("passwordField", QVariant(passwordField));
+            }
+            */
+
+            thekeyboard->setParentItem(keyboard);
+            thekeyboard->setProperty("raised", true);
+
+            return;
+        }
+    }
+
+    thekeyboard->setProperty("raised", false);
+
+#endif
 }
 
 void OffscreenQmlSurface::setKeyboardRaised(QObject* object, bool raised, bool numeric, bool passwordField) {
@@ -779,6 +844,8 @@ void OffscreenQmlSurface::setKeyboardRaised(QObject* object, bool raised, bool n
             qDebug() << "keyboard found: " << keyboard << "parent: " << keyboard->parent();
 
             thekeyboard->setParentItem(keyboard);
+            thekeyboard->setProperty("numeric", numeric);
+            thekeyboard->setProperty("passwordField", passwordField);
             thekeyboard->setProperty("raised", true);
 
             return;
