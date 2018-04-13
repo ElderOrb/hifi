@@ -16,20 +16,63 @@ Rectangle {
     id: keyboardBase
     objectName: "virtualkeyboard"
 
-    Binding on anchors.fill {
-        when: parent
-        value: parent
+    onParentChanged: {
+        console.debug('parent: ', parent)
+
+        if(parent != null) {
+            anchors.left = Qt.binding(function() { return parent.left });
+            anchors.right = Qt.binding(function() { return parent.right });
+        } else {
+            anchors.left = undefined;
+            anchors.right = undefined;
+        }
     }
+
+    /* for some reasons it doesn't work as it should / results in 'TypeError: Cannot read property of null' errors
+    Binding on anchors.right {
+        when: parent
+        value: parent.right
+    }
+    */
 
     Binding {
         target: parent
         when: parent
         property: "raised"
-        value: keyboardBase.visible
+        value: raised
+    }
+
+    Binding {
+        target: parent
+        when: parent
+        property: "enabled"
+        value: enabled
+    }
+
+    Binding {
+        target: parent
+        when: parent
+        property: "width"
+        value: width
+    }
+
+    Binding {
+        target: parent
+        when: parent
+        property: "height"
+        value: height
+    }
+
+    Binding {
+        target: parent
+        when: parent
+        property: "raisedHeight"
+        value: raisedHeight
     }
 
     color: "#252525"
 
+    property bool enabled: true
     property bool raised: false
     property bool numeric: false
 
@@ -43,8 +86,20 @@ Rectangle {
     property bool showMirrorText: true
     readonly property int raisedHeight: 200
 
+    width: keyboardWidth
     height: enabled && raised ? raisedHeight + (showMirrorText ? keyboardRowHeight : 0) : 0
+
+    onHeightChanged: {
+        console.debug('virtualkeyboard height: ', height)
+    }
+    onWidthChanged: {
+        console.debug('virtualkeyboard width: ', width)
+    }
+
     visible: enabled && raised
+    onVisibleChanged: {
+        console.debug('virtualkeyboard visible: ', visible)
+    }
 
     property bool shiftMode: false
     property bool numericShiftMode: false
