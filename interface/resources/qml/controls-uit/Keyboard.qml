@@ -1,28 +1,43 @@
 import QtQuick 2.0
 
 Rectangle {
+    id: keyboard
     objectName: "keyboard"
-    color: 'gray'
+    color: 'green'
+    opacity: 0.5
+
+    onWidthChanged: {
+        console.debug('keyboard: ', keyboard, 'onWidthChanged: ', width);        
+    }
+    onHeightChanged: {
+        console.debug('keyboard: ', keyboard, 'onHeightChanged: ', height);        
+    }
 
     property bool raised;
     onRaisedChanged: {
-        console.debug('onRaisedChanged: ', raised);
+        console.debug('keyboard: ', keyboard, 'onRaisedChanged: ', raised);
     }
 
     property bool password;
     onPasswordChanged: {
-        console.debug('onPasswordChanged: ', password);
+        console.debug('keyboard: ', keyboard, 'onPasswordChanged: ', password);
     }
 
-        height: raisedHeight
     property bool numeric;
-            height: raisedHeight
     onNumericChanged: {
-            height: raisedHeight
-        console.debug('onNumericChanged: ', numeric);
+        console.debug('keyboard: ', keyboard, 'onNumericChanged: ', numeric);
+    }
+
+    property int raisedHeight: 0;
+    onRaisedHeightChanged: {
+        console.debug('keyboard: ', keyboard, 'onRaisedHeightChanged: ', raisedHeight);    
+    }
+
+    function resetShiftMode(mode) {
+        console.debug('keyboard: ', keyboard, 'resetShiftMode stub called: ', mode);
     }
 
     onChildrenChanged: {
-        console.debug(parent.objectName)
+        console.debug(parent.objectName);
     }
 }

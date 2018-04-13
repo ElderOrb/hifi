@@ -22,16 +22,24 @@ FocusScope {
     objectName: "desktop"
     anchors.fill: parent
 
-	VirtualKeyboard {
-        id: vk
-        parent: null
-    }
-
     readonly property int invalid_position: -9999;
     property rect recommendedRect: Qt.rect(0,0,0,0);
     property var expectedChildren;
     property bool repositionLocked: true
     property bool hmdHandMouseActive: false
+
+    Component.onCompleted: {
+        console.debug('Desktop created: ', desktop)
+    }
+
+    VirtualKeyboard {
+        id: vk
+        parent: null
+
+        Component.onCompleted: {
+            console.debug('Desktop: VirtualKeyboard created for ', desktop)
+        }
+    }
 
     onRepositionLockedChanged: {
         if (!repositionLocked) {
