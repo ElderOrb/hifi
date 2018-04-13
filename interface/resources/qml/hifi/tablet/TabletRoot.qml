@@ -1,6 +1,7 @@
 import QtQuick 2.0
 import Hifi 1.0
 
+import "../../controls-uit"
 import "../../dialogs"
 import "../../controls"
 
@@ -18,6 +19,15 @@ Item {
     property bool shown: true
     property int currentApp: -1;
     property alias tabletApps: tabletApps
+
+    VirtualKeyboard {
+	    id: vk
+	    parent: null
+
+	    Component.onCompleted: {
+	         console.debug('TabletRoot: VirtualKeyboard created for ', tabletRoot)
+	    }
+    }
 
     function setOption(value) {
         option = value;

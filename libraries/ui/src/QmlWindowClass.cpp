@@ -180,11 +180,122 @@ void QmlWindowClass::emitWebEvent(const QVariant& webMessage) {
     }
 }
 
+static int distanceToParent(QQuickItem* from, QQuickItem* to) {
+    int i = 0;
+    while (true) {
+        if (from == nullptr) {
+            return -1;
+        }
+        else if (from == to) {
+            return i;
+        }
+
+        ++i;
+        from = qobject_cast<QQuickItem*> (from->parent());
+    }
+    return i;
+}
+
+static void findChildren(QQuickItem* item, QQuickItem* exclude, const QString& objectName, std::function<void(QQuickItem*)> onChildFound) {
+    for (auto child : item->children()) {
+        if (child != exclude) {
+            auto quickItem = qobject_cast<QQuickItem*>(child);
+            if (quickItem) {
+                if (quickItem->objectName() == objectName) {
+                    onChildFound(quickItem);
+                }
+                findChildren(quickItem, exclude, objectName, onChildFound);
+            }
+        }
+    }
+}
+
+static QList<QQuickItem*> findKeyboards(QQuickItem* root, QQuickItem* exclude) {
+    if (exclude == nullptr) {
+        return root->findChildren<QQuickItem*>(QString("keyboard"));
+    }
+
+    QList<QQuickItem*> keyboards;
+    findChildren(root, exclude, QString("keyboard"), [&](QQuickItem* keyboard) {
+        keyboards.append(keyboard);
+    });
+
+    return keyboards;
+}
+
+static QQuickItem* findNearestKeyboard(QQuickItem *focusItem) {
+
+    QQuickItem* item = focusItem;
+    QQuickItem* visited = nullptr;
+
+    while (item) {
+        if (item->property("keyboardRaised").isValid()) {
+            auto keyboards = findKeyboards(item, visited);
+
+            if (!keyboards.empty()) {
+                QQuickItem* nearestKeyboard = nullptr;
+                int minDistance = INT_MAX;
+
+                for (auto keyboard : keyboards) {
+                    auto distance = distanceToParent(keyboard, item);
+                    qDebug() << "keyboard: " << keyboard << "with distance to item: " << distance;
+
+                    if (minDistance > distance) {
+                        minDistance = distance;
+                        nearestKeyboard = keyboard;
+                    }
+                }
+                return nearestKeyboard;
+            }
+
+            visited = item;
+        }
+        item = qobject_cast<QQuickItem*>(item->parentItem());
+    }
+
+    return nullptr;
+}
+
 void QmlWindowClass::setKeyboardRaised(QObject* object, bool raised, bool numeric) {
     if (!object) {
         return;
     }
 
+    auto focusObject = object;
+    auto offscreenUi = DependencyManager::get<OffscreenUi>();
+    auto root = offscreenUi->getRootItem();
+    qDebug() << "root: " << root << "objectName: " << root->objectName();
+
+    auto thekeyboard = root->findChild<QQuickItem*>(QString("virtualkeyboard"));
+    assert(thekeyboard);
+
+    if (!thekeyboard) {
+        qWarning("no 'virtualkeyboard' found!");
+        return;
+    }
+
+    auto quickItem = qobject_cast<QQuickItem*>(focusObject);
+    if (quickItem && quickItem->hasActiveFocus())
+    {
+        auto keyboard = findNearestKeyboard(qobject_cast<QQuickItem*> (focusObject));
+        qDebug() << "focusObject: " << focusObject << "keyboard: " << keyboard << "keyboard.parent: " << keyboard->parent();
+
+        if (keyboard) {
+            thekeyboard->setProperty("raised", true);
+            thekeyboard->setParentItem(keyboard);
+
+            qDebug() << "attaching keyboard to placeholder...";
+            return;
+        }
+        else {
+            qDebug() << "keyboard not found.. ";
+        }
+    }
+
+    qDebug() << "hiding keyboard.. ";
+    thekeyboard->setProperty("raised", false);
+
+	/*
     QQuickItem* item = dynamic_cast<QQuickItem*>(object);
     while (item) {
         if (item->property("keyboardRaised").isValid()) {
@@ -196,6 +307,7 @@ void QmlWindowClass::setKeyboardRaised(QObject* object, bool raised, bool numeri
         }
         item = dynamic_cast<QQuickItem*>(item->parentItem());
     }
+    */
 }
 
 QmlWindowClass::~QmlWindowClass() {

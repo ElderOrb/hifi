@@ -54,7 +54,7 @@ StackView {
         tablet = Tablet.getTablet("com.highfidelity.interface.tablet.system");
 
         Qt.callLater(function() {
-            addressBarDialog.keyboardEnabled = HMD.active;
+            // addressBarDialog.keyboardEnabled = HMD.active;
             addressLine.forceActiveFocus();
         })
     }
@@ -87,7 +87,8 @@ StackView {
     AddressBarDialog {
         id: addressBarDialog
 
-        property bool keyboardEnabled: false
+        // property bool keyboardEnabled: false
+        property bool keyboardRaised: false
         property bool punctuationMode: false
 
         width: parent.width
@@ -104,7 +105,8 @@ StackView {
             propagateComposedEvents: true
             onPressed: {
                 parent.forceActiveFocus();
-                addressBarDialog.keyboardEnabled = false;
+                addressLine.setFocus(false);
+                // addressBarDialog.keyboardEnabled = false;
                 mouse.accepted = false;
             }
         }
@@ -220,7 +222,7 @@ StackView {
                     updateLocationText(text.length > 0);
                 }
                 onAccepted: {
-                    addressBarDialog.keyboardEnabled = false;
+                    // addressBarDialog.keyboardEnabled = false;
                     toggleOrGo();
                 }
 
@@ -274,9 +276,11 @@ StackView {
                     onClicked: {
                         addressLine.focus = true;
                         addressLine.forceActiveFocus();
+						/*
                         if (HMD.active) {
                             addressBarDialog.keyboardEnabled = HMD.active;
                         }
+						*/
                         tabletRoot.playButtonClickSound();
                     }
                 }
@@ -287,7 +291,7 @@ StackView {
             id: bgMain;
             anchors {
                 top: addressBar.bottom;
-                bottom: parent.keyboardEnabled ? keyboard.top : parent.bottom;
+                bottom: parent.keyboardRaised ? keyboard.top : parent.bottom;
                 left: parent.left;
                 right: parent.right;
             }
@@ -378,7 +382,8 @@ StackView {
 
         HifiControls.Keyboard {
             id: keyboard
-            raised: parent.keyboardEnabled
+			// raised: parent.keyboardEnabled
+            raised: parent.keyboardRaised
             numeric: parent.punctuationMode
             anchors {
                 bottom: parent.bottom

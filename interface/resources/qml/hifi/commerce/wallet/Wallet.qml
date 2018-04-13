@@ -28,6 +28,8 @@ Rectangle {
 
     property string activeView: "initialize";
     property bool keyboardRaised: false;
+    property var keyboardContainer: keyboard; // I failed to invent how to find this 'keyboard' from C++ because of ambiguity with other keyboards, 
+											// so just specified it here to allow searching by 'keyboardContainer'
     property bool isPassword: false;
 
     anchors.fill: (typeof parent === undefined) ? undefined : parent;

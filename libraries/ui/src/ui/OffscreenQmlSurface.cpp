@@ -657,19 +657,91 @@ void OffscreenQmlSurface::lowerKeyboard() {
     }
 }
 
-QQuickItem* findNearestKeyboard(QQuickItem *focusItem) {
-    auto item = focusItem;
+static int distanceToParent(QQuickItem* from, QQuickItem* to) {
+    int i = 0;
+    while (true) {
+        if (from == nullptr) {
+            return -1;
+        } else if (from == to) {
+            return i;
+        }
 
-    int level = 0;
+        ++i;
+        from = qobject_cast<QQuickItem*> (from->parent());
+    }
+    return i;
+}
+
+static void findChildren(QQuickItem* item, QQuickItem* exclude, const QString& objectName, std::function<void(QQuickItem*)> onChildFound) {
+    for (auto child : item->children()) {
+        if (child != exclude) {
+            auto quickItem = qobject_cast<QQuickItem*>(child);
+            if (quickItem) {
+                if (quickItem->objectName() == objectName) {
+                    onChildFound(quickItem);
+                }
+                findChildren(quickItem, exclude, objectName, onChildFound);
+            }
+        }
+    }
+}
+
+static QList<QQuickItem*> findKeyboards(QQuickItem* root, QQuickItem* exclude) {
+    if (exclude == nullptr) {
+        return root->findChildren<QQuickItem*>(QString("keyboard"));
+    }
+
+    QList<QQuickItem*> keyboards;
+    findChildren(root, exclude, QString("keyboard"), [&](QQuickItem* keyboard) {
+        keyboards.append(keyboard);
+    });
+
+    return keyboards;
+}
+
+static void outputParents(QQuickItem* item) {
+    auto i = item;
+    int a = 1;
+    while (i) {
+        qDebug() << QString(a * 2, ' ') << i << "<=";
+        i = qobject_cast<QQuickItem*> (i->parent());
+        ++a;
+    }
+}
+
+static QQuickItem* findNearestKeyboard(QQuickItem *focusItem) {
+
+    QQuickItem* item = focusItem;
+    QQuickItem* visited = nullptr;
+
     while (item) {
-        qDebug() << QString(level, ' ') + "item: " << item;
+        if (item->property("keyboardRaised").isValid()) {
+            if (item->property("keyboardContainer").isValid()) {
+                return qvariant_cast<QQuickItem*> (item->property("keyboardContainer"));
+            }
 
-        auto keyboard = item->findChild<QQuickItem*>(QString("keyboard"));
-        if (keyboard)
-            return keyboard;
+            auto keyboards = findKeyboards(item, visited);
 
-        item = item->parentItem();
-        ++level;
+            if (!keyboards.empty()) {
+                QQuickItem* nearestKeyboard = nullptr;
+                int minDistance = INT_MAX;
+
+                for (auto keyboard : keyboards) {
+                    auto distance = distanceToParent(keyboard, item);
+                    qDebug() << "keyboard: " << keyboard << "with distance to item: " << distance;
+                    outputParents(keyboard);
+
+                    if (minDistance > distance) {
+                        minDistance = distance;
+                        nearestKeyboard = keyboard;
+                    }
+                }
+                return nearestKeyboard;
+            }
+
+            visited = item;
+        }
+        item = dynamic_cast<QQuickItem*>(item->parentItem());
     }
 
     return nullptr;
@@ -693,25 +765,27 @@ void OffscreenQmlSurface::setKeyboardRaised(QObject* object, bool raised, bool n
     assert(thekeyboard);
 
     if (!thekeyboard) {
-        qWarning("no 'virtualkeyboard' found!");
+        qWarning() << "no 'virtualkeyboard' found!" << root << root->parent();
         return;
     }
 
     auto quickItem = qobject_cast<QQuickItem*>(focusObject);
-    if (quickItem && quickItem->hasActiveFocus())
+    if (quickItem && raised)
     {
         auto keyboard = findNearestKeyboard(qobject_cast<QQuickItem*> (focusObject));
         qDebug() << "focusObject: " << focusObject;
 
         if (keyboard) {
+            qDebug() << "keyboard found: " << keyboard << "parent: " << keyboard->parent();
+
             thekeyboard->setParentItem(keyboard);
-            thekeyboard->setVisible(true);
+            thekeyboard->setProperty("raised", true);
 
             return;
         }
     }
 
-    thekeyboard->setVisible(false);
+    thekeyboard->setProperty("raised", false);
 
 	/*
     // if HMD is being worn, allow keyboard to open.  allow it to close, HMD or not.
