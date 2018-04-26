@@ -12,51 +12,66 @@ Rectangle {
 	height: 706
     color: style.colors.white
 
-    property var selectedAvatar;
+    property string selectedAvatarId: ''
+    onSelectedAvatarIdChanged: {
+        console.debug('selectedAvatarId: ', selectedAvatarId)
+    }
+
+    property var selectedAvatar: selectedAvatarId !== '' ? allAvatars.findAvatar(selectedAvatarId) : undefined
+    onSelectedAvatarChanged: {
+        console.debug('selectedAvatar: ', selectedAvatar ? selectedAvatar.url : selectedAvatar)
+    }
+
     property string avatarName: selectedAvatar ? selectedAvatar.name : ''
     property string avatarUrl: selectedAvatar ? selectedAvatar.url : null
-    property int avatarWearablesCount: selectedAvatar ? selectedAvatar.wearables.count : 0
+    property int avatarWearablesCount: selectedAvatar && selectedAvatar.wearables !== '' ? selectedAvatar.wearables.split('|').length : 0
     property bool isAvatarInFavorites: selectedAvatar ? selectedAvatar.favorite : false
 
+    property bool isInManageState: false
+
     Component.onCompleted: {
-        selectedAvatar = view.model.get(view.currentIndex)
+        for(var i = 0; i < allAvatars.count; ++i) {
+            var originalUrl = allAvatars.get(i).url;
+            if(originalUrl !== '') {
+                var resolvedUrl = Qt.resolvedUrl(originalUrl);
+                console.debug('url: ', originalUrl, 'resolved: ', resolvedUrl);
+                allAvatars.setProperty(i, 'url', resolvedUrl);
+            }
+        }
+
+        selectedAvatarId = allAvatars.get(1).url
         console.debug('wearables: ', selectedAvatar.wearables)
+
+        view.setPage(0)
+        console.debug('view.currentIndex: ', view.currentIndex);
     }
 
     AvatarAppStyle {
         id: style
     }
 
-    Rectangle {
+    AvatarAppHeader {
         id: header
-        anchors.left: parent.left
-        anchors.right: parent.right
-        height: 84
-        color: style.colors.lightGrayBackground
+        z: 100
 
-        HiFiGlyphs {
-            id: avatarIcon
-            anchors.left: parent.left
-            anchors.leftMargin: 23
-            anchors.top: parent.top
-            anchors.topMargin: 29
+        pageTitle: !settings.visible ? "Avatar" : "Avatar Settings"
+        avatarIconVisible: !settings.visible
+        settingsButtonVisible: !settings.visible
 
-            size: 38
-            text: "<"
+        onSettingsClicked: {
+            settings.open();
         }
+    }
 
-        TextStyle6 {
-            anchors.left: avatarIcon.right
-            anchors.leftMargin: 4
-            anchors.verticalCenter: avatarIcon.verticalCenter
-            text: 'Avatar'
+    Settings {
+        id: settings
+        visible: true
+
+        onSaveClicked: function() {
+            close();
         }
-
-        HiFiGlyphs {
-            anchors.right: parent.right
-            anchors.rightMargin: 30
-            anchors.verticalCenter: avatarIcon.verticalCenter
-            text: "&"
+        onCancelClicked: function() {
+            close();
         }
     }
 
@@ -145,6 +160,12 @@ Rectangle {
                     anchors.fill: parent
                     onClicked: {
                         console.debug('selectedAvatar.url', selectedAvatar.url)
+                        createFavorite.onSaveClicked = function() {
+                            selectedAvatar.favorite = true;
+                            pageOfAvatars.setProperty(view.currentIndex, 'favorite', selectedAvatar.favorite)
+                            createFavorite.close();
+                        }
+
                         createFavorite.open(selectedAvatar);
                     }
                 }
@@ -175,6 +196,24 @@ Rectangle {
             anchors.verticalCenter: avatarNameLabel.verticalCenter
             glyphText: "."
             glyphRotation: 45
+
+            MouseArea {
+                anchors.fill: parent
+                onClicked: {
+                    popup.titleText = 'Specify Avatar URL'
+                    popup.bodyText = 'If you want to add a custom avatar, you can specify the URL of the avatar file' +
+                            '(“.fst” extension) here. <a href="#">Learn to make a custom avatar by opening this link on your desktop.</a>'
+                    popup.inputText.visible = true;
+                    popup.inputText.placeholderText = 'Enter Avatar Url';
+                    popup.button1text = 'CANCEL';
+                    popup.button2text = 'CONFIRM';
+                    popup.onButton2Clicked = function() {
+                        popup.close();
+                    }
+
+                    popup.open();
+                }
+            }
         }
 
         SquareLabel {
@@ -205,8 +244,38 @@ Rectangle {
                 anchors.fill: parent
                 property url getWearablesUrl: '../../images/samples/hifi-place-77312e4b-6f48-4eb4-87e2-50444d8e56d1.png'
 
+                // debug only
+                acceptedButtons: Qt.LeftButton | Qt.RightButton
+                property int debug_newAvatarIndex: 0
+
                 onClicked: {
-                    var selectedAvatar = view.model.get(view.currentIndex);
+                    if(mouse.button == Qt.RightButton) {
+
+                        for(var i = 0; i < 3; ++i)
+                        {
+                            console.debug('adding avatar...');
+
+                            var avatar = {
+                                'url': '../../images/samples/hifi-mp-e76946cc-c272-4adf-9bb6-02cde0a4b57d-2.png',
+                                'name': 'Lexi' + (++debug_newAvatarIndex),
+                                'wearables': '',
+                                'favorite': false
+                            };
+
+                            allAvatars.append(avatar)
+
+                            if(pageOfAvatars.hasGetAvatars())
+                                pageOfAvatars.removeGetAvatars();
+
+                            if(pageOfAvatars.count !== view.itemsPerPage)
+                                pageOfAvatars.append(avatar);
+
+                            if(pageOfAvatars.count !== view.itemsPerPage)
+                                pageOfAvatars.appendGetAvatars();
+                        }
+
+                        return;
+                    }
 
                     popup.button2text = 'AvatarIsland'
                     popup.button1text = 'CANCEL'
@@ -252,8 +321,14 @@ Rectangle {
             anchors.topMargin: 9
             anchors.right: parent.right
             anchors.rightMargin: 30
-            text: "Manage"
+            text: isInManageState ? "Back" : "Manage"
             color: style.colors.blueHighlight
+            MouseArea {
+                anchors.fill: parent
+                onClicked: {
+                    isInManageState = isInManageState ? false : true;
+                }
+            }
         }
 
         Item {
@@ -269,16 +344,101 @@ Rectangle {
             GridView {
                 id: view
                 anchors.fill: parent
-                model: AvatarsModel {
-                    id: model
-                    Component.onCompleted: {
-                        for(var i = 0; i < model.count; ++i) {
-                            var originalUrl = model.get(i).url;
-                            if(originalUrl !== '') {
-                                var resolvedUrl = Qt.resolvedUrl(originalUrl);
-                                console.debug('url: ', originalUrl, 'resolved: ', resolvedUrl);
-                                model.setProperty(i, 'url', resolvedUrl);
+                interactive: false;
+                currentIndex: (selectedAvatarId !== '' && !pageOfAvatars.isUpdating) ? pageOfAvatars.findAvatar(selectedAvatarId) : -1
+
+                AvatarsModel {
+                    id: allAvatars
+
+                    function findAvatar(avatarId) {
+                        console.debug('AvatarsModel: find avatar by', avatarId);
+
+                        for(var i = 0; i < count; ++i) {
+                            if(get(i).url === avatarId) {
+                                console.debug('avatar found by index: ', i)
+                                return get(i);
                             }
+                        }
+
+                        return -1;
+                    }
+                }
+
+                property int itemsPerPage: 8
+                property int totalPages: Math.ceil((allAvatars.count + 1) / itemsPerPage)
+                onTotalPagesChanged: {
+                    console.debug('total pages: ', totalPages)
+                }
+
+                property int currentPage: 0;
+                onCurrentPageChanged: {
+                    console.debug('currentPage: ', currentPage)
+                    currentIndex = Qt.binding(function() {
+                        return (selectedAvatarId !== '' && !pageOfAvatars.isUpdating) ? pageOfAvatars.findAvatar(selectedAvatarId) : -1
+                    })
+                }
+
+                property bool hasNext: currentPage < (totalPages - 1)
+                onHasNextChanged: {
+                    console.debug('hasNext: ', hasNext)
+                }
+
+                property bool hasPrev: currentPage > 0
+                onHasPrevChanged: {
+                    console.debug('hasPrev: ', hasPrev)
+                }
+
+                function setPage(pageIndex) {
+                    pageOfAvatars.isUpdating = true;
+                    pageOfAvatars.clear();
+                    var start = pageIndex * itemsPerPage;
+                    var end = Math.min(start + itemsPerPage, allAvatars.count);
+
+                    for(var itemIndex = 0; start < end; ++start, ++itemIndex) {
+                        var avatarItem = allAvatars.get(start)
+                        console.debug('getting ', start, avatarItem)
+                        pageOfAvatars.append(avatarItem);
+                    }
+
+                    if(pageOfAvatars.count !== itemsPerPage)
+                        pageOfAvatars.appendGetAvatars();
+
+                    currentPage = pageIndex;
+                    console.debug('switched to the page with', pageOfAvatars.count, 'items')
+                    pageOfAvatars.isUpdating = false;
+                }
+
+                model: ListModel {
+                    id: pageOfAvatars
+
+                    property bool isUpdating: false;
+                    property var getMoreAvatars: {'url' : '', 'name' : 'Get More Avatars'}
+
+                    function findAvatar(avatarId) {
+                        console.debug('pageOfAvatars.findAvatar: ', avatarId);
+
+                        for(var i = 0; i < count; ++i) {
+                            if(get(i).url === avatarId) {
+                                console.debug('avatar found by index: ', i)
+                                return i;
+                            }
+                        }
+
+                        return -1;
+                    }
+
+                    function appendGetAvatars() {
+                        append(getMoreAvatars);
+                    }
+
+                    function hasGetAvatars() {
+                        return count != 0 && get(count - 1).url === ''
+                    }
+
+                    function removeGetAvatars() {
+                        if(hasGetAvatars()) {
+                            remove(count - 1)
+                            console.debug('removed get avatars...');
                         }
                     }
                 }
@@ -311,7 +471,11 @@ Rectangle {
                         AvatarThumbnail {
                             id: favoriteAvatarImage
                             imageUrl: url
-                            wearablesCount: wearables ? wearables.count : 0
+                            wearablesCount: (wearables && wearables !== '') ? wearables.split('|').length : 0
+                            onWearablesCountChanged: {
+                                console.debug('delegate: AvatarThumbnail.wearablesCount: ', wearablesCount)
+                            }
+
                             visible: url !== ''
 
                             MouseArea {
@@ -321,19 +485,63 @@ Rectangle {
                                 property url getWearablesUrl: '../../images/samples/hifi-place-77312e4b-6f48-4eb4-87e2-50444d8e56d1.png'
 
                                 onClicked: {
-                                    if(delegateRoot.GridView.view.currentIndex !== index) {
+                                    if(isInManageState) {
                                         var currentItem = delegateRoot.GridView.view.model.get(index);
 
-                                        popup.button2text = 'CONFIRM'
+                                        popup.titleText = 'Delete Favorite: {AvatarName}'.replace('{AvatarName}', currentItem.name)
+                                        popup.bodyText = 'This will delete your favorite. You will retain access to the wearables and avatar that made up the favorite from My Purchases.'
+                                        popup.imageSource = null;
                                         popup.button1text = 'CANCEL'
-                                        popup.titleText = 'Load Favorite: {AvatarName}'.replace('{AvatarName}', currentItem.name)
-                                        popup.bodyText = 'This will switch your current avatar and wearables that you are wearing with a new avatar and wearables.'
+                                        popup.button2text = 'DELETE'
+
                                         popup.onButton2Clicked = function() {
-                                            selectedAvatar = currentItem;
                                             popup.close();
-                                            delegateRoot.GridView.view.currentIndex = index;
-                                        }
+
+                                            pageOfAvatars.isUpdating = true;
+
+                                            console.debug('removing ', index)
+
+                                            var absoluteIndex = view.currentPage * view.itemsPerPage + index
+                                            console.debug('removed ', absoluteIndex, 'view.currentPage', view.currentPage,
+                                                          'view.itemsPerPage: ', view.itemsPerPage, 'index', index, 'pageOfAvatars', pageOfAvatars, 'pageOfAvatars.count', pageOfAvatars)
+
+                                            allAvatars.remove(absoluteIndex)
+                                            pageOfAvatars.remove(index);
+
+                                            var itemsOnPage = pageOfAvatars.count;
+                                            var newItemIndex = view.currentPage * view.itemsPerPage + itemsOnPage;
+
+                                            console.debug('newItemIndex: ', newItemIndex, 'allAvatars.count - 1: ', allAvatars.count - 1, 'pageOfAvatars.count:', pageOfAvatars.count);
+
+                                            if(newItemIndex <= (allAvatars.count - 1)) {
+                                                pageOfAvatars.append(allAvatars.get(newItemIndex));
+                                            } else {
+                                                if(!pageOfAvatars.hasGetAvatars())
+                                                    pageOfAvatars.appendGetAvatars();
+                                            }
+
+                                            console.debug('removed ', absoluteIndex, 'newItemIndex: ', newItemIndex, 'allAvatars.count:', allAvatars.count, 'pageOfAvatars.count:', pageOfAvatars.count)
+                                            pageOfAvatars.isUpdating = false;
+                                        };
+
                                         popup.open();
+
+                                    } else {
+                                        if(delegateRoot.GridView.view.currentIndex !== index) {
+                                            var currentItem = delegateRoot.GridView.view.model.get(index);
+
+                                            popup.button2text = 'CONFIRM'
+                                            popup.button1text = 'CANCEL'
+                                            popup.titleText = 'Load Favorite: {AvatarName}'.replace('{AvatarName}', currentItem.name)
+                                            popup.bodyText = 'This will switch your current avatar and ararables that you are wearing with a new avatar and wearables.'
+                                            popup.imageSource = null;
+                                            popup.onButton2Clicked = function() {
+                                                selectedAvatarId = currentItem.url;
+                                                popup.close();
+                                                delegateRoot.GridView.view.currentIndex = index;
+                                            }
+                                            popup.open();
+                                        }
                                     }
                                 }
                             }
@@ -348,17 +556,33 @@ Rectangle {
                             border.color: style.colors.blueHighlight
                         }
 
+                        Colorize {
+                            anchors.fill: favoriteAvatarImage
+                            source: favoriteAvatarImage
+                            saturation: 0.2
+                            visible: isInManageState && !highlight.visible
+                        }
+
+                        HiFiGlyphs {
+                            anchors.fill: parent
+                            text: "{"
+                            visible: isInManageState && !highlight.visible
+                            horizontalAlignment: Text.AlignHCenter
+                            size: 56
+                        }
+
                         ShadowRectangle {
                             width: 92
                             height: 92
                             color: style.colors.blueHighlight
                             visible: url === ''
 
-                            Rectangle {
+                            HiFiGlyphs {
                                 anchors.centerIn: parent
+
                                 color: 'white'
-                                width: 48
-                                height: 48
+                                size: 60
+                                text: "K"
                             }
 
                             MouseArea {
@@ -367,9 +591,8 @@ Rectangle {
 
                                 onClicked: {
                                     console.debug('getAvatarsUrl: ', getAvatarsUrl);
-                                    var selectedAvatar = view.model.get(view.currentIndex);
 
-                                    popup.button2text = 'AvatarIsland'
+                                    popup.button2text = 'BodyMarkt'
                                     popup.button1text = 'CANCEL'
                                     popup.titleText = 'Get Avatars'
 
@@ -404,10 +627,49 @@ Rectangle {
             }
 
         }
+
+        Row {
+            anchors.horizontalCenter: parent.horizontalCenter
+
+            HiFiGlyphs {
+                rotation: 180
+                text: "\ue01d";
+                size: 50
+                color: view.hasPrev ? 'black' : 'gray'
+                horizontalAlignment: Text.AlignHCenter
+                MouseArea {
+                    anchors.fill: parent
+                    enabled: view.hasPrev
+                    onClicked: {
+                        view.setPage(view.currentPage - 1)
+                    }
+                }
+            }
+
+            spacing: 0
+
+            HiFiGlyphs {
+                text: "\ue01d";
+                size: 50
+                color: view.hasNext ? 'black' : 'gray'
+                horizontalAlignment: Text.AlignHCenter
+                MouseArea {
+                    anchors.fill: parent
+                    enabled: view.hasNext
+                    onClicked: {
+                        view.setPage(view.currentPage + 1)
+                    }
+                }
+            }
+
+            anchors.bottom: parent.bottom
+            anchors.bottomMargin: 19
+        }
     }
 
     AdjustWearables {
         id: adjustWearables
+        z: 2
     }
 
     MessageBox {
@@ -428,15 +690,9 @@ Rectangle {
         visible: false
         onVisibleChanged: {
             if(visible) {
-                // todo: make better solution when api available
-
                 console.debug('selectedAvatar.wearables: ', selectedAvatar.wearables)
-                var tmp = selectedAvatar;
-                selectedAvatar.wearables = ['hat', 'sunglasses', 'bracelet']
-                selectedAvatar = null;
-                selectedAvatar = tmp;
-
-                console.debug('selectedAvatar.wearables count: ', selectedAvatar.wearables.count)
+                selectedAvatar.wearables = 'hat|sunglasses|bracelet'
+                pageOfAvatars.setProperty(view.currentIndex, 'wearables', selectedAvatar.wearables)
             }
         }
 
@@ -472,35 +728,33 @@ Rectangle {
 
                 MouseArea {
                     anchors.fill: parent
-                    onClicked: gotoAvatarAppPanel.visible = false;
+                    property int newAvatarIndex: 0
+
+                    onClicked: {
+                        gotoAvatarAppPanel.visible = false;
+
+                        var avatar = {
+                            'url': '../../images/samples/hifi-mp-e76946cc-c272-4adf-9bb6-02cde0a4b57d-2.png',
+                            'name': 'Lexi' + (++newAvatarIndex),
+                            'wearables': '',
+                            'favorite': false
+                        };
+
+                        allAvatars.append(avatar)
+
+                        if(pageOfAvatars.hasGetAvatars())
+                            pageOfAvatars.removeGetAvatars();
+
+                        if(pageOfAvatars.count !== view.itemsPerPage)
+                            pageOfAvatars.append(avatar);
+
+                        if(pageOfAvatars.count !== view.itemsPerPage)
+                            pageOfAvatars.appendGetAvatars();
+
+                        console.debug('avatar appended: allAvatars.count: ', allAvatars.count, 'pageOfAvatars.count: ', pageOfAvatars.count);
+                    }
                 }
             }
         }
     }
-
-    /*
-    HifiConstants { id: hifi }
-
-    HifiControls.SpinBox {
-        id: scaleSpinner;
-        anchors { left: parent.left; right: parent.right; bottom: parent.bottom; }
-        decimals: 2;
-        minimumValue: 0.01
-        maximumValue: 10
-        stepSize: 0.05;
-
-        labelInside: "X:"
-        colorScheme: hifi.colorSchemes.dark
-        colorLabelInside: hifi.colors.redHighlight
-
-        value: attachment ? attachment.scale : 1.0
-        onValueChanged: {
-            if (completed && attachment && attachment.scale !== value) {
-                attachment.scale = value;
-                updateAttachment();
-            }
-        }
-        onFocusChanged: doSelectAttachment(this, focus);
-    }
-    */
 }

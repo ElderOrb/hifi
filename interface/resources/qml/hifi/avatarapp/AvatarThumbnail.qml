@@ -5,13 +5,13 @@ Item {
     height: 92
 
     property int wearablesCount: 0
-    property alias dropShadowRadius: avatarImage.dropShadowRadius
-    property alias dropShadowHorizontalOffset: avatarImage.dropShadowHorizontalOffset
-    property alias dropShadowVerticalOffset: avatarImage.dropShadowVerticalOffset
-
     onWearablesCountChanged: {
         console.debug('AvatarThumbnail: wearablesCount = ', wearablesCount)
     }
+
+    property alias dropShadowRadius: avatarImage.dropShadowRadius
+    property alias dropShadowHorizontalOffset: avatarImage.dropShadowHorizontalOffset
+    property alias dropShadowVerticalOffset: avatarImage.dropShadowVerticalOffset
 
     property alias imageUrl: avatarImage.source
 

@@ -21,13 +21,13 @@ Rectangle {
     property string button2color: hifi.buttons.blue;
     property string button2text: 'CONFIRM'
 
-    property var onButton2Clicked;
-    property var onButton1Clicked;
+    property var onSaveClicked;
+    property var onCancelClicked;
 
     function open(avatar) {
         favoriteName.text = '';
         avatarImageUrl = avatar.url;
-        wearablesCount = avatar.wearables.count;
+        wearablesCount = avatar.wearables !== '' ? avatar.wearables.split('|').length : 0;
 
         visible = true;
     }
@@ -53,7 +53,9 @@ Rectangle {
     Rectangle {
         id: mainContainer;
         width: Math.max(parent.width * 0.8, 400)
-        height: contentContainer.height + title.height + 50
+        property int margin: 30;
+
+        height: childrenRect.height + margin * 2
         onHeightChanged: {
             console.debug('mainContainer: height = ', height)
         }
@@ -114,16 +116,16 @@ Rectangle {
                 noText: root.button1text
 
                 onYesClicked: function() {
-                    if(onButton2Clicked) {
-                        onButton2Clicked();
+                    if(onSaveClicked) {
+                        onSaveClicked();
                     } else {
                         root.close();
                     }
                 }
 
                 onNoClicked: function() {
-                    if(onButton1Clicked) {
-                        onButton1Clicked();
+                    if(onCancelClicked) {
+                        onCancelClicked();
                     } else {
                         root.close();
                     }

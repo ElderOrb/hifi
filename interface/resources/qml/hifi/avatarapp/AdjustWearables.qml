@@ -153,7 +153,7 @@ Rectangle {
         }
     }
 
-    Row {
+    DialogButtons {
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 30
         anchors.left: parent.left
@@ -161,36 +161,22 @@ Rectangle {
         anchors.right: parent.right
         anchors.rightMargin: 30
 
-        layoutDirection: Qt.RightToLeft
+        yesText: "SAVE"
+        noText: "CANCEL"
 
-        HifiControlsUit.Button {
-            id: button2;
-            color: hifi.buttons.blue;
-            colorScheme: hifi.colorSchemes.light;
-            enabled: modified
-            text: "SAVE";
-            onClicked: {
-                if(onButton2Clicked) {
-                    onButton2Clicked();
-                } else {
-                    close();
-                }
+        onYesClicked: function() {
+            if(onButton2Clicked) {
+                onButton2Clicked();
+            } else {
+                root.close();
             }
         }
 
-        spacing: 20
-
-        HifiControlsUit.Button {
-            id: button1;
-            color: hifi.buttons.noneBorderlessGray;
-            colorScheme: hifi.colorSchemes.light;
-            text: "CANCEL";
-            onClicked: {
-                if(onButton1Clicked) {
-                    onButton1Clicked();
-                } else {
-                    close();
-                }
+        onNoClicked: function() {
+            if(onButton1Clicked) {
+                onButton1Clicked();
+            } else {
+                root.close();
             }
         }
     }

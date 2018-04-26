@@ -13,6 +13,7 @@ Rectangle {
 
     property string titleText: ''
     property string bodyText: ''
+    property alias inputText: input;
 
     property string imageSource: null
     onImageSourceChanged: {
@@ -33,18 +34,15 @@ Rectangle {
 
     function close() {
         visible = false;
-    }
 
-    function reset() {
-        titleText = ''
-        bodyText = ''
+        onButton1Clicked = null;
+        onButton2Clicked = null;
+        button1text = '';
+        button2text = '';
         imageSource = null;
-        button1color = hifi.buttons.noneBorderlessGray;
-        button1text = ''
-        button2color = hifi.buttons.blue;
-        button2text = ''
-        onButton1Clicked = undefined;
-        onButton2Clicked = undefined;
+        inputText.visible = false;
+        inputText.placeholderText = '';
+        inputText.text = '';
     }
 
     HifiConstants {
@@ -63,7 +61,9 @@ Rectangle {
     Rectangle {
         id: mainContainer;
         width: Math.max(parent.width * 0.8, 400)
-        height: contentContainer.height + title.height + 50
+        property int margin: 30;
+
+        height: childrenRect.height + margin * 2
         onHeightChanged: {
             console.debug('mainContainer: height = ', height)
         }
@@ -86,7 +86,7 @@ Rectangle {
 
         Item {
             id: contentContainer
-            width: parent.width - 50
+            width: parent.width - 60
             height: childrenRect.height
             onHeightChanged: {
                 console.debug('contentContainer: height = ', height,
@@ -102,7 +102,7 @@ Rectangle {
             anchors.right: parent.right;
             anchors.rightMargin: 30;
 
-            TextStyle2 {
+            TextStyle3 {
                 id: body;
                 text: root.bodyText;
                 anchors.left: parent.left;
@@ -120,6 +120,7 @@ Rectangle {
                 }
 
                 anchors.top: body.bottom
+                anchors.topMargin: imageSource === null ? 0 : 30
                 anchors.left: parent.left;
                 anchors.right: parent.right;
 
@@ -131,47 +132,46 @@ Rectangle {
                 visible: imageSource !== null ? true : false
             }
 
-            Row {
-                anchors.top: imageSource ? image.bottom : body.bottom
-                anchors.topMargin: 50
-                anchors.left: parent.left
-                anchors.right: parent.right
-                height: childrenRect.height
+            InputTextStyle4 {
+                id: input
+                visible: false
+                height: visible ? implicitHeight : 0
 
-                layoutDirection: Qt.RightToLeft
+                anchors.top: imageSource !== null ? image.bottom : body.bottom
+                anchors.left: parent.left;
+                anchors.right: parent.right;
+            }
+        }
 
-                HifiControlsUit.Button {
-                    id: button2;
-                    color: button2color;
-                    colorScheme: hifi.colorSchemes.light;
-                    text: root.button2text;
-                    onClicked: {
-                        if(onButton2Clicked) {
-                            onButton2Clicked();
-                        } else {
-                            close();
-                        }
+        DialogButtons {
+            id: buttons
 
-                        reset();
-                    }
+            anchors.top: contentContainer.bottom
+            anchors.topMargin: 30
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.rightMargin: 30
+
+            yesButton.enabled: !input.visible || input.text.length !== 0
+            yesText: root.button2text
+            noText: root.button1text
+
+            onYesClicked: function() {
+                if(onButton2Clicked) {
+                    onButton2Clicked();
+                } else {
+                    root.close();
                 }
+            }
 
-                HifiControlsUit.Button {
-                    id: button1;
-                    color: button1color;
-                    colorScheme: hifi.colorSchemes.light;
-                    text: root.button1text;
-                    onClicked: {
-                        if(onButton1Clicked) {
-                            onButton1Clicked();
-                        } else {
-                            close();
-                        }
-
-                        reset();
-                    }
+            onNoClicked: function() {
+                if(onButton1Clicked) {
+                    onButton1Clicked();
+                } else {
+                    root.close();
                 }
             }
         }
+
     }
 }

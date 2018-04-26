@@ -6,48 +6,43 @@ ListModel {
     ListElement {
         url: '../../images/samples/hifi-mp-e76946cc-c272-4adf-9bb6-02cde0a4b57d.png'
         name: 'Woody'
-        wearables: []
+        wearables: ''
         favorite: false
     }
     ListElement {
         url: '../../images/samples/hifi-mp-e76946cc-c272-4adf-9bb6-02cde0a4b57d-1.png'
         name: 'Damien'
-        wearables: []
+        wearables: ''
         favorite: false
     }
     ListElement {
         url: '../../images/samples/hifi-mp-e76946cc-c272-4adf-9bb6-02cde0a4b57d-2.png'
         name: 'Lexi'
-        wearables: []
+        wearables: ''
         favorite: false
     }
     ListElement {
         url: '../../images/samples/hifi-mp-e76946cc-c272-4adf-9bb6-02cde0a4b57d-3.png'
         name: 'Judie'
-        wearables: []
+        wearables: ''
         favorite: true
     }
     ListElement {
         url: '../../images/samples/hifi-mp-e76946cc-c272-4adf-9bb6-02cde0a4b57d-4.png'
         name: 'Alex'
-        wearables: []
+        wearables: ''
         favorite: true
     }
     ListElement {
         url: '../../images/samples/hifi-mp-e76946cc-c272-4adf-9bb6-02cde0a4b57d-5.png'
         name: 'Matthew'
-        wearables: []
+        wearables: ''
         favorite: true
     }
     ListElement {
         url: '../../images/samples/hifi-mp-e76946cc-c272-4adf-9bb6-02cde0a4b57d-5.png'
         name: 'Ogre'
-        wearables: []
+        wearables: ''
         favorite: true
-    }
-
-    ListElement {
-        url: ''
-        name: 'Get More Avatars'
     }
 }
