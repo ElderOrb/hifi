@@ -10,12 +10,7 @@ Rectangle {
     id: settings
 
     color: 'white'
-    anchors.left: parent.left
-    anchors.right: parent.right
-    anchors.top: header.bottom
-    anchors.bottom: parent.bottom
     visible: false;
-    z: 3
 
     property alias onSaveClicked: dialogButtons.onYesClicked
     property alias onCancelClicked: dialogButtons.onNoClicked
@@ -26,6 +21,15 @@ Rectangle {
 
     function close() {
         visible = false
+    }
+
+    // This object is always used in a popup.
+    // This MouseArea is used to prevent a user from being
+    //     able to click on a button/mouseArea underneath the popup.
+    MouseArea {
+        anchors.fill: parent;
+        propagateComposedEvents: false;
+        hoverEnabled: true;
     }
 
     Item {
@@ -161,16 +165,9 @@ Rectangle {
                 ButtonGroup.group: leftRight
                 checked: true
 
+                colorScheme: hifi.colorSchemes.light
                 text: "Left hand"
                 boxSize: 20
-
-                contentItem: TextStyle9 {
-                    text: leftHandRadioButton.text
-                    color: 'black'
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                    leftPadding: leftHandRadioButton.indicator.width + leftHandRadioButton.spacing
-                }
             }
 
             HifiControlsUit.RadioButton {
@@ -180,16 +177,9 @@ Rectangle {
                 Layout.column: 2
                 ButtonGroup.group: leftRight
 
+                colorScheme: hifi.colorSchemes.light
                 text: "Right hand"
                 boxSize: 20
-
-                contentItem: TextStyle9 {
-                    text: rightHandRadioButton.text
-                    color: 'black'
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                    leftPadding: rightHandRadioButton.indicator.width + rightHandRadioButton.spacing
-                }
             }
 
             RalewaySemiBold {
@@ -210,20 +200,17 @@ Rectangle {
                 Layout.row: 1
                 Layout.column: 1
                 Layout.leftMargin: -18
-
                 ButtonGroup.group: onOff
+
+                colorScheme: hifi.colorSchemes.light
                 checked: true
 
                 text: "ON"
                 boxSize: 20
+            }
 
-                contentItem: TextStyle9 {
-                    text: onRadioButton.text
-                    color: 'black'
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                    leftPadding: onRadioButton.indicator.width + onRadioButton.spacing
-                }
+            HifiConstants {
+                id: hifi
             }
 
             HifiControlsUit.RadioButton {
@@ -232,17 +219,10 @@ Rectangle {
                 Layout.row: 1
                 Layout.column: 2
                 ButtonGroup.group: onOff
+                colorScheme: hifi.colorSchemes.light
 
                 text: "OFF"
                 boxSize: 20
-
-                contentItem: TextStyle9 {
-                    text: offRadioButton.text
-                    color: 'black'
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                    leftPadding: offRadioButton.indicator.width + offRadioButton.spacing
-                }
             }
         }
 

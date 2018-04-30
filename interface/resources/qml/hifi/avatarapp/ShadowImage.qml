@@ -7,11 +7,14 @@ Item {
     property alias dropShadowRadius: shadow.radius
     property alias dropShadowHorizontalOffset: shadow.horizontalOffset
     property alias dropShadowVerticalOffset: shadow.verticalOffset
+    property alias radius: image.radius
+    property alias border: image.border
 
-    Image {
+    RoundImage {
         id: image
         width: parent.width
         height: parent.height
+        radius: 6
     }
 
     DropShadow {

@@ -22,6 +22,10 @@ Rectangle {
         console.debug('selectedAvatar: ', selectedAvatar ? selectedAvatar.url : selectedAvatar)
     }
 
+    function isEqualById(avatar, avatarId) {
+        return (avatar.url + avatar.name) === avatarId
+    }
+
     property string avatarName: selectedAvatar ? selectedAvatar.name : ''
     property string avatarUrl: selectedAvatar ? selectedAvatar.url : null
     property int avatarWearablesCount: selectedAvatar && selectedAvatar.wearables !== '' ? selectedAvatar.wearables.split('|').length : 0
@@ -39,11 +43,7 @@ Rectangle {
             }
         }
 
-        selectedAvatarId = allAvatars.get(1).url
-        console.debug('wearables: ', selectedAvatar.wearables)
-
-        view.setPage(0)
-        console.debug('view.currentIndex: ', view.currentIndex);
+        view.selectAvatar(allAvatars.get(1));
     }
 
     AvatarAppStyle {
@@ -54,10 +54,25 @@ Rectangle {
         id: header
         z: 100
 
-        pageTitle: !settings.visible ? "Avatar" : "Avatar Settings"
-        avatarIconVisible: !settings.visible
-        settingsButtonVisible: !settings.visible
+        property string currentPage: "Avatar"
+        property bool mainPageVisible: !settings.visible && !adjustWearables.visible
 
+        Binding on currentPage {
+            when: settings.visible
+            value: "Avatar Settings"
+        }
+        Binding on currentPage {
+            when: adjustWearables.visible
+            value: "Adjust Wearables"
+        }
+        Binding on currentPage {
+            when: header.mainPageVisible
+            value: "Avatar"
+        }
+
+        pageTitle: currentPage
+        avatarIconVisible: mainPageVisible
+        settingsButtonVisible: mainPageVisible
         onSettingsClicked: {
             settings.open();
         }
@@ -65,7 +80,12 @@ Rectangle {
 
     Settings {
         id: settings
-        visible: true
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.top: header.bottom
+        anchors.bottom: parent.bottom
+
+        z: 3
 
         onSaveClicked: function() {
             close();
@@ -73,6 +93,16 @@ Rectangle {
         onCancelClicked: function() {
             close();
         }
+    }
+
+    AdjustWearables {
+        id: adjustWearables
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.top: header.bottom
+        anchors.bottom: parent.bottom
+
+        z: 3
     }
 
     Rectangle {
@@ -98,14 +128,47 @@ Rectangle {
             text: 'Display Name'
         }
 
-        InputTextStyle4 {
+        TextField {
+            id: displayNameInput
             anchors.left: displayNameLabel.right
             anchors.leftMargin: 30
             anchors.verticalCenter: displayNameLabel.verticalCenter
             anchors.right: parent.right
             anchors.rightMargin: 36
             width: 232
+
+            property bool error: text === '';
             text: 'ThisIsDisplayName'
+
+            states: [
+                State {
+                    name: "hovered"
+                    when: displayNameInput.hovered && !displayNameInput.focus && !displayNameInput.error;
+                    PropertyChanges { target: displayNameInputBackground; color: '#afafaf' }
+                },
+                State {
+                    name: "focused"
+                    when: displayNameInput.focus && !displayNameInput.error
+                    PropertyChanges { target: displayNameInputBackground; color: '#f2f2f2' }
+                    PropertyChanges { target: displayNameInputBackground; border.color: '#00b4ef' }
+                },
+                State {
+                    name: "error"
+                    when: displayNameInput.error
+                    PropertyChanges { target: displayNameInputBackground; color: '#f2f2f2' }
+                    PropertyChanges { target: displayNameInputBackground; border.color: '#e84e62' }
+                }
+            ]
+
+            background: Rectangle {
+                id: displayNameInputBackground
+                implicitWidth: 200
+                implicitHeight: 40
+                color: '#d4d4d4'
+                border.color: '#afafaf'
+                border.width: 1
+                radius: 2
+            }
 
             HiFiGlyphs {
                 anchors.right: parent.right
@@ -136,7 +199,6 @@ Rectangle {
 
         Row {
             id: star
-
             anchors.top: parent.top
             anchors.topMargin: 119
             anchors.left: avatarImage.right
@@ -154,21 +216,21 @@ Rectangle {
             TextStyle5 {
                 text: isAvatarInFavorites ? avatarName : "Add to Favorites"
                 anchors.verticalCenter: parent.verticalCenter
+            }
+        }
 
-                MouseArea {
-                    enabled: !isAvatarInFavorites
-                    anchors.fill: parent
-                    onClicked: {
-                        console.debug('selectedAvatar.url', selectedAvatar.url)
-                        createFavorite.onSaveClicked = function() {
-                            selectedAvatar.favorite = true;
-                            pageOfAvatars.setProperty(view.currentIndex, 'favorite', selectedAvatar.favorite)
-                            createFavorite.close();
-                        }
-
-                        createFavorite.open(selectedAvatar);
-                    }
+        MouseArea {
+            enabled: !isAvatarInFavorites
+            anchors.fill: star
+            onClicked: {
+                console.debug('selectedAvatar.url', selectedAvatar.url)
+                createFavorite.onSaveClicked = function() {
+                    selectedAvatar.favorite = true;
+                    pageOfAvatars.setProperty(view.currentIndex, 'favorite', selectedAvatar.favorite)
+                    createFavorite.close();
                 }
+
+                createFavorite.open(selectedAvatar);
             }
         }
 
@@ -195,7 +257,7 @@ Rectangle {
             anchors.rightMargin: 30
             anchors.verticalCenter: avatarNameLabel.verticalCenter
             glyphText: "."
-            glyphRotation: 45
+            glyphSize: 22
 
             MouseArea {
                 anchors.fill: parent
@@ -335,7 +397,7 @@ Rectangle {
             anchors.left: parent.left
             anchors.leftMargin: 30
             anchors.right: parent.right
-            anchors.rightMargin: 30
+            anchors.rightMargin: 0
 
             anchors.top: favoritesLabel.bottom
             anchors.topMargin: 9
@@ -347,20 +409,37 @@ Rectangle {
                 interactive: false;
                 currentIndex: (selectedAvatarId !== '' && !pageOfAvatars.isUpdating) ? pageOfAvatars.findAvatar(selectedAvatarId) : -1
 
+                property int horizontalSpacing: 18
+                property int verticalSpacing: 36
+
+                function selectAvatar(avatar) {
+                    selectedAvatarId = avatar.url + avatar.name;
+                    var avatarIndex = allAvatars.findAvatarIndex(selectedAvatarId);
+                    allAvatars.move(avatarIndex, 0, 1);
+                    view.setPage(0);
+                }
+
                 AvatarsModel {
                     id: allAvatars
+
+                    function findAvatarIndex(avatarId) {
+                        for(var i = 0; i < count; ++i) {
+                            if(isEqualById(get(i), avatarId)) {
+                                console.debug('avatar found by index: ', i)
+                                return i;
+                            }
+                        }
+                        return -1;
+                    }
 
                     function findAvatar(avatarId) {
                         console.debug('AvatarsModel: find avatar by', avatarId);
 
-                        for(var i = 0; i < count; ++i) {
-                            if(get(i).url === avatarId) {
-                                console.debug('avatar found by index: ', i)
-                                return get(i);
-                            }
-                        }
+                        var avatarIndex = findAvatarIndex(avatarId);
+                        if(avatarIndex === -1)
+                            return undefined;
 
-                        return -1;
+                        return get(avatarIndex);
                     }
                 }
 
@@ -418,7 +497,7 @@ Rectangle {
                         console.debug('pageOfAvatars.findAvatar: ', avatarId);
 
                         for(var i = 0; i < count; ++i) {
-                            if(get(i).url === avatarId) {
+                            if(isEqualById(get(i), avatarId)) {
                                 console.debug('avatar found by index: ', i)
                                 return i;
                             }
@@ -443,10 +522,10 @@ Rectangle {
                     }
                 }
 
-                flow: GridView.FlowTopToBottom
+                flow: GridView.FlowLeftToRight
 
-                cellHeight: 92 + 36
-                cellWidth: 92 + 18
+                cellHeight: 92 + verticalSpacing
+                cellWidth: 92 + horizontalSpacing
 
                 delegate: Item {
                     id: delegateRoot
@@ -468,9 +547,13 @@ Rectangle {
                             }
                         ]
 
+                        property bool highlighted: delegateRoot.GridView.isCurrentItem
+
                         AvatarThumbnail {
                             id: favoriteAvatarImage
                             imageUrl: url
+                            border.color: container.highlighted ? style.colors.blueHighlight : 'transparent'
+                            border.width: container.highlighted ? 2 : 0
                             wearablesCount: (wearables && wearables !== '') ? wearables.split('|').length : 0
                             onWearablesCountChanged: {
                                 console.debug('delegate: AvatarThumbnail.wearablesCount: ', wearablesCount)
@@ -481,7 +564,9 @@ Rectangle {
                             MouseArea {
                                 id: favoriteAvatarMouseArea
                                 anchors.fill: parent
-                                hoverEnabled: true
+                                enabled: !container.highlighted
+                                hoverEnabled: enabled
+
                                 property url getWearablesUrl: '../../images/samples/hifi-place-77312e4b-6f48-4eb4-87e2-50444d8e56d1.png'
 
                                 onClicked: {
@@ -533,12 +618,11 @@ Rectangle {
                                             popup.button2text = 'CONFIRM'
                                             popup.button1text = 'CANCEL'
                                             popup.titleText = 'Load Favorite: {AvatarName}'.replace('{AvatarName}', currentItem.name)
-                                            popup.bodyText = 'This will switch your current avatar and ararables that you are wearing with a new avatar and wearables.'
+                                            popup.bodyText = 'This will switch your current avatar and wearables that you are wearing with a new avatar and wearables.'
                                             popup.imageSource = null;
                                             popup.onButton2Clicked = function() {
-                                                selectedAvatarId = currentItem.url;
                                                 popup.close();
-                                                delegateRoot.GridView.view.currentIndex = index;
+                                                view.selectAvatar(currentItem);
                                             }
                                             popup.open();
                                         }
@@ -548,25 +632,17 @@ Rectangle {
                         }
 
                         Rectangle {
-                            id: highlight
                             anchors.fill: favoriteAvatarImage
-                            visible: delegateRoot.GridView.isCurrentItem
-                            color: 'transparent'
-                            border.width: 2
-                            border.color: style.colors.blueHighlight
-                        }
-
-                        Colorize {
-                            anchors.fill: favoriteAvatarImage
-                            source: favoriteAvatarImage
-                            saturation: 0.2
-                            visible: isInManageState && !highlight.visible
+                            color: '#AFAFAF'
+                            opacity: 0.4
+                            radius: 5
+                            visible: isInManageState && !container.highlighted && url !== ''
                         }
 
                         HiFiGlyphs {
                             anchors.fill: parent
                             text: "{"
-                            visible: isInManageState && !highlight.visible
+                            visible: isInManageState && !container.highlighted && url !== ''
                             horizontalAlignment: Text.AlignHCenter
                             size: 56
                         }
@@ -574,8 +650,9 @@ Rectangle {
                         ShadowRectangle {
                             width: 92
                             height: 92
+                            radius: 5
                             color: style.colors.blueHighlight
-                            visible: url === ''
+                            visible: url === '' && !isInManageState
 
                             HiFiGlyphs {
                                 anchors.centerIn: parent
@@ -592,7 +669,7 @@ Rectangle {
                                 onClicked: {
                                     console.debug('getAvatarsUrl: ', getAvatarsUrl);
 
-                                    popup.button2text = 'BodyMarkt'
+                                    popup.button2text = 'BodyMart'
                                     popup.button1text = 'CANCEL'
                                     popup.titleText = 'Get Avatars'
 
@@ -622,6 +699,7 @@ Rectangle {
                         horizontalAlignment: Text.AlignHCenter
                         wrapMode: Text.WrapAtWordBoundaryOrAnywhere
                         text: name
+                        visible: url !== '' || !isInManageState
                     }
                 }
             }
@@ -636,6 +714,7 @@ Rectangle {
                 text: "\ue01d";
                 size: 50
                 color: view.hasPrev ? 'black' : 'gray'
+                visible: view.hasNext || view.hasPrev
                 horizontalAlignment: Text.AlignHCenter
                 MouseArea {
                     anchors.fill: parent
@@ -652,6 +731,7 @@ Rectangle {
                 text: "\ue01d";
                 size: 50
                 color: view.hasNext ? 'black' : 'gray'
+                visible: view.hasNext || view.hasPrev
                 horizontalAlignment: Text.AlignHCenter
                 MouseArea {
                     anchors.fill: parent
@@ -665,11 +745,6 @@ Rectangle {
             anchors.bottom: parent.bottom
             anchors.bottomMargin: 19
         }
-    }
-
-    AdjustWearables {
-        id: adjustWearables
-        z: 2
     }
 
     MessageBox {
