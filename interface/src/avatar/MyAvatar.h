@@ -870,7 +870,7 @@ public:
 
     bool hasDriveInput() const;
 
-    QVariantList getAvatarEntitiesVariant();
+    Q_INVOKABLE QVariantList getAvatarEntitiesVariant();
     void removeAvatarEntities();
 
     /**jsdoc
