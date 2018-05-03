@@ -95,6 +95,9 @@ AvatarBookmarks::AvatarBookmarks() {
     readFromFile();
 }
 
+void addBookmark(const QString& bookmarkName, const QVariantMap& bookmarkData) {
+}
+
 void AvatarBookmarks::readFromFile() {
     // migrate old avatarbookmarks.json, used to be in 'local' folder on windows
     QString oldConfigPath = QStandardPaths::writableLocation(QStandardPaths::DataLocation) + "/" + AVATARBOOKMARKS_FILENAME;

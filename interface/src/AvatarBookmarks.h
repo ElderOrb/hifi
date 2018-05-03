@@ -35,8 +35,9 @@ public slots:
      * @function AvatarBookmarks.addBookMark
      */
     void addBookmark();
-    void addBookmark(QString bookmarkName) {}
-    void removeBookmark(QString bookmark) {}
+    void addBookmark(const QString& bookmarkName, const QVariantMap& bookmarkData);
+    void editBookmark(const QString& bookmarkName, const QVariantMap& bookmarkData);
+    void removeBookmark(const QString& bookmark);
     QVariantMap getBookmarks() { return _bookmarks; }
 
 protected:
