@@ -12,6 +12,38 @@ Rectangle {
 	height: 706
     color: style.colors.white
 
+    property string getFavoritesMethod: 'getFavorites'
+
+    signal sendToScript(var message);
+    function emitSendToScript(message) {
+        console.debug('AvatarApp.qml: emitting sendToScript: ', JSON.stringify(message, null, '\t'));
+        sendToScript(message);
+    }
+
+    function fromScript(message) {
+        console.debug('AvatarApp.qml: fromScript: ', JSON.stringify(message, null, '\t'))
+
+        if(message.method === 'initialize') {
+            emitSendToScript({'method' : getFavoritesMethod});
+        } else if(message.method === getFavoritesMethod) {
+            var avatarFavorites = message.reply;
+            var i = 0;
+
+            for(var avatarName in avatarFavorites) {
+                var avatarEntry = {
+                    'name' : avatarName,
+                    'favorite' : true,
+                    'url' : allAvatars.urls[i++ % allAvatars.urls.length],
+                    'wearables' : ''
+                };
+
+                allAvatars.append(avatarEntry);
+            }
+
+            view.selectAvatar(allAvatars.get(1));
+        }
+    }
+
     property string selectedAvatarId: ''
     onSelectedAvatarIdChanged: {
         console.debug('selectedAvatarId: ', selectedAvatarId)
@@ -34,16 +66,6 @@ Rectangle {
     property bool isInManageState: false
 
     Component.onCompleted: {
-        for(var i = 0; i < allAvatars.count; ++i) {
-            var originalUrl = allAvatars.get(i).url;
-            if(originalUrl !== '') {
-                var resolvedUrl = Qt.resolvedUrl(originalUrl);
-                console.debug('url: ', originalUrl, 'resolved: ', resolvedUrl);
-                allAvatars.setProperty(i, 'url', resolvedUrl);
-            }
-        }
-
-        view.selectAvatar(allAvatars.get(1));
     }
 
     AvatarAppStyle {
@@ -491,7 +513,7 @@ Rectangle {
                     id: pageOfAvatars
 
                     property bool isUpdating: false;
-                    property var getMoreAvatars: {'url' : '', 'name' : 'Get More Avatars'}
+                    property var getMoreAvatars: {'url' : '', 'name' : ''}
 
                     function findAvatar(avatarId) {
                         console.debug('pageOfAvatars.findAvatar: ', avatarId);
@@ -511,7 +533,7 @@ Rectangle {
                     }
 
                     function hasGetAvatars() {
-                        return count != 0 && get(count - 1).url === ''
+                        return count != 0 && get(count - 1).name === ''
                     }
 
                     function removeGetAvatars() {
@@ -559,7 +581,7 @@ Rectangle {
                                 console.debug('delegate: AvatarThumbnail.wearablesCount: ', wearablesCount)
                             }
 
-                            visible: url !== ''
+                            visible: name !== ''
 
                             MouseArea {
                                 id: favoriteAvatarMouseArea
@@ -652,7 +674,7 @@ Rectangle {
                             height: 92
                             radius: 5
                             color: style.colors.blueHighlight
-                            visible: url === '' && !isInManageState
+                            visible: name === '' && !isInManageState
 
                             HiFiGlyphs {
                                 anchors.centerIn: parent
@@ -698,8 +720,8 @@ Rectangle {
                         verticalAlignment: Text.AlignTop
                         horizontalAlignment: Text.AlignHCenter
                         wrapMode: Text.WrapAtWordBoundaryOrAnywhere
-                        text: name
-                        visible: url !== '' || !isInManageState
+                        text: name !== '' ? name : 'Get More Avatars'
+                        visible: name !== '' || !isInManageState
                     }
                 }
             }
@@ -808,11 +830,14 @@ Rectangle {
                     onClicked: {
                         gotoAvatarAppPanel.visible = false;
 
+                        var i = allAvatars.count + 1;
+                        var url = allAvatars.urls[i++ % allAvatars.urls.length]
+
                         var avatar = {
-                            'url': '../../images/samples/hifi-mp-e76946cc-c272-4adf-9bb6-02cde0a4b57d-2.png',
+                            'url': url,
                             'name': 'Lexi' + (++newAvatarIndex),
                             'wearables': '',
-                            'favorite': false
+                            'favorite': true
                         };
 
                         allAvatars.append(avatar)
