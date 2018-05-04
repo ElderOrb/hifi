@@ -435,6 +435,7 @@ Rectangle {
                 property int verticalSpacing: 36
 
                 function selectAvatar(avatar) {
+                    AvatarBookmarks.loadBookmark(avatar.name);
                     selectedAvatarId = avatar.url + avatar.name;
                     var avatarIndex = allAvatars.findAvatarIndex(selectedAvatarId);
                     allAvatars.move(avatarIndex, 0, 1);
