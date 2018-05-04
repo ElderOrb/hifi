@@ -564,11 +564,7 @@ Rectangle {
                     id: pageOfAvatars
 
                     property bool isUpdating: false;
-<<<<<<< HEAD
-                    property var getMoreAvatars: {'url' : '', 'name' : ''}
-=======
                     property var getMoreAvatarsEntry: {'url' : '', 'name' : '', 'getMoreAvatars' : true}
->>>>>>> 86640900e0b50d8f21ec5f1b6b8a216483ef7f93
 
                     function findAvatar(avatarId) {
                         console.debug('pageOfAvatars.findAvatar: ', avatarId);
@@ -588,11 +584,7 @@ Rectangle {
                     }
 
                     function hasGetAvatars() {
-<<<<<<< HEAD
-                        return count != 0 && get(count - 1).name === ''
-=======
                         return count != 0 && get(count - 1).getMoreAvatars
->>>>>>> 86640900e0b50d8f21ec5f1b6b8a216483ef7f93
                     }
 
                     function removeGetAvatars() {
@@ -640,11 +632,7 @@ Rectangle {
                                 console.debug('delegate: AvatarThumbnail.wearablesCount: ', wearablesCount)
                             }
 
-<<<<<<< HEAD
-                            visible: name !== ''
-=======
                             visible: !getMoreAvatars
->>>>>>> 86640900e0b50d8f21ec5f1b6b8a216483ef7f93
 
                             MouseArea {
                                 id: favoriteAvatarMouseArea
@@ -737,11 +725,7 @@ Rectangle {
                             height: 92
                             radius: 5
                             color: style.colors.blueHighlight
-<<<<<<< HEAD
-                            visible: name === '' && !isInManageState
-=======
                             visible: getMoreAvatars && !isInManageState
->>>>>>> 86640900e0b50d8f21ec5f1b6b8a216483ef7f93
 
                             HiFiGlyphs {
                                 anchors.centerIn: parent
@@ -787,13 +771,8 @@ Rectangle {
                         verticalAlignment: Text.AlignTop
                         horizontalAlignment: Text.AlignHCenter
                         wrapMode: Text.WrapAtWordBoundaryOrAnywhere
-<<<<<<< HEAD
-                        text: name !== '' ? name : 'Get More Avatars'
-                        visible: name !== '' || !isInManageState
-=======
                         text: getMoreAvatars ? 'Get More Avatars' : name
                         visible: !getMoreAvatars || !isInManageState
->>>>>>> 86640900e0b50d8f21ec5f1b6b8a216483ef7f93
                     }
                 }
             }
@@ -899,16 +878,9 @@ Rectangle {
                         var url = allAvatars.urls[i++ % allAvatars.urls.length]
 
                         var avatar = {
-<<<<<<< HEAD
-                            'url': url,
-                            'name': 'Lexi' + (++newAvatarIndex),
-                            'wearables': '',
-                            'favorite': true
-=======
                             'url': Qt.resolvedUrl(url),
                             'name': 'Lexi' + (++newAvatarIndex),
                             'wearables': 'hat|sunglasses|bracelet'
->>>>>>> 86640900e0b50d8f21ec5f1b6b8a216483ef7f93
                         };
 
                         allAvatars.append(avatar)
