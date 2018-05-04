@@ -11,8 +11,7 @@ Rectangle {
     width: 480
 	height: 706
     color: style.colors.white
-
-    property string getFavoritesMethod: 'getFavorites'
+    property string getAvatarsMethod: 'getAvatars'
 
     signal sendToScript(var message);
     function emitSendToScript(message) {
@@ -24,44 +23,94 @@ Rectangle {
         console.debug('AvatarApp.qml: fromScript: ', JSON.stringify(message, null, '\t'))
 
         if(message.method === 'initialize') {
-            emitSendToScript({'method' : getFavoritesMethod});
-        } else if(message.method === getFavoritesMethod) {
-            var avatarFavorites = message.reply;
+            emitSendToScript({'method' : getAvatarsMethod});
+        } else if(message.method === getAvatarsMethod) {
+            var getAvatarsReply = message.reply;
             var i = 0;
 
-            for(var avatarName in avatarFavorites) {
+            for(var avatarName in getAvatarsReply.bookmarks) {
                 var avatarEntry = {
                     'name' : avatarName,
-                    'favorite' : true,
-                    'url' : allAvatars.urls[i++ % allAvatars.urls.length],
-                    'wearables' : ''
+                    'url' : Qt.resolvedUrl(allAvatars.urls[i++ % allAvatars.urls.length]),
+                    'wearables' : '',
+                    'entry' : getAvatarsReply.bookmarks[avatarName]
                 };
 
                 allAvatars.append(avatarEntry);
             }
 
-            view.selectAvatar(allAvatars.get(1));
+            var currentAvatar = getAvatarsReply.currentAvatar;
+            console.debug('currentAvatar: ', JSON.stringify(currentAvatar, null, '\t'));
+            var selectedAvatarIndex = -1;
+
+            // 2DO: find better way of determining selected avatar in bookmarks
+            console.debug('allAvatars.count: ', allAvatars.count);
+            for(var i = 0; i < allAvatars.count; ++i) {
+                var thesame = true;
+                for(var prop in currentAvatar) {
+                    console.debug('prop', prop);
+
+                    var v1 = currentAvatar[prop];
+                    var v2 = allAvatars.get(i).entry[prop];
+                    console.debug('v1', v1, 'v2', v2);
+
+                    var s1 = JSON.stringify(v1);
+                    var s2 = JSON.stringify(v2);
+
+                    console.debug('comparing\n', s1, 'to\n', s2, '...');
+                    if(s1 !== s2) {
+                        if(!(Array.isArray(v1) && v1.length === 0 && v2 === undefined)) {
+                            thesame = false;
+                            break;
+                        }
+                    }
+                    console.debug('values seems to be the same...');
+                }
+                if(thesame) {
+                    selectedAvatarIndex = i;
+                    break;
+                }
+            }
+
+            console.debug('selectedAvatarIndex = -1, avatar is not favorite')
+
+            if(selectedAvatarIndex === -1) {
+                var currentAvatarEntry = {
+                    'name' : '',
+                    'url' : Qt.resolvedUrl(allAvatars.urls[i++ % allAvatars.urls.length]),
+                    'wearables' : '',
+                    'entry' : currentAvatar
+                };
+
+                selectedAvatar = currentAvatarEntry;
+                view.setPage(0);
+
+                console.debug('selectedAvatar = ', JSON.stringify(selectedAvatar, null, '\t'))
+            } else {
+                view.selectAvatar(allAvatars.get(selectedAvatarIndex));
+            }
         }
     }
 
     property string selectedAvatarId: ''
     onSelectedAvatarIdChanged: {
         console.debug('selectedAvatarId: ', selectedAvatarId)
+        selectedAvatar = allAvatars.findAvatar(selectedAvatarId);
     }
 
-    property var selectedAvatar: selectedAvatarId !== '' ? allAvatars.findAvatar(selectedAvatarId) : undefined
+    property var selectedAvatar;
     onSelectedAvatarChanged: {
-        console.debug('selectedAvatar: ', selectedAvatar ? selectedAvatar.url : selectedAvatar)
+        console.debug('onSelectedAvatarChanged.selectedAvatar: ', JSON.stringify(selectedAvatar, null, '\t'));
     }
 
     function isEqualById(avatar, avatarId) {
-        return (avatar.url + avatar.name) === avatarId
+        return (avatar.name) === avatarId
     }
 
     property string avatarName: selectedAvatar ? selectedAvatar.name : ''
     property string avatarUrl: selectedAvatar ? selectedAvatar.url : null
     property int avatarWearablesCount: selectedAvatar && selectedAvatar.wearables !== '' ? selectedAvatar.wearables.split('|').length : 0
-    property bool isAvatarInFavorites: selectedAvatar ? selectedAvatar.favorite : false
+    property bool isAvatarInFavorites: selectedAvatar ? allAvatars.findAvatar(selectedAvatar.name) !== undefined : false
 
     property bool isInManageState: false
 
@@ -247,8 +296,10 @@ Rectangle {
             onClicked: {
                 console.debug('selectedAvatar.url', selectedAvatar.url)
                 createFavorite.onSaveClicked = function() {
-                    selectedAvatar.favorite = true;
-                    pageOfAvatars.setProperty(view.currentIndex, 'favorite', selectedAvatar.favorite)
+                    var newAvatar = JSON.parse(JSON.stringify(selectedAvatar));
+                    newAvatar.name = createFavorite.favoriteNameText;
+                    allAvatars.append(newAvatar);
+                    view.selectAvatar(newAvatar);
                     createFavorite.close();
                 }
 
@@ -340,10 +391,9 @@ Rectangle {
                             console.debug('adding avatar...');
 
                             var avatar = {
-                                'url': '../../images/samples/hifi-mp-e76946cc-c272-4adf-9bb6-02cde0a4b57d-2.png',
+                                'url': Qt.resolvedUrl('../../images/samples/hifi-mp-e76946cc-c272-4adf-9bb6-02cde0a4b57d-2.png'),
                                 'name': 'Lexi' + (++debug_newAvatarIndex),
-                                'wearables': '',
-                                'favorite': false
+                                'wearables': ''
                             };
 
                             allAvatars.append(avatar)
@@ -436,7 +486,7 @@ Rectangle {
 
                 function selectAvatar(avatar) {
                     AvatarBookmarks.loadBookmark(avatar.name);
-                    selectedAvatarId = avatar.url + avatar.name;
+                    selectedAvatarId = avatar.name;
                     var avatarIndex = allAvatars.findAvatarIndex(selectedAvatarId);
                     allAvatars.move(avatarIndex, 0, 1);
                     view.setPage(0);
@@ -514,7 +564,11 @@ Rectangle {
                     id: pageOfAvatars
 
                     property bool isUpdating: false;
+<<<<<<< HEAD
                     property var getMoreAvatars: {'url' : '', 'name' : ''}
+=======
+                    property var getMoreAvatarsEntry: {'url' : '', 'name' : '', 'getMoreAvatars' : true}
+>>>>>>> 86640900e0b50d8f21ec5f1b6b8a216483ef7f93
 
                     function findAvatar(avatarId) {
                         console.debug('pageOfAvatars.findAvatar: ', avatarId);
@@ -530,11 +584,15 @@ Rectangle {
                     }
 
                     function appendGetAvatars() {
-                        append(getMoreAvatars);
+                        append(getMoreAvatarsEntry);
                     }
 
                     function hasGetAvatars() {
+<<<<<<< HEAD
                         return count != 0 && get(count - 1).name === ''
+=======
+                        return count != 0 && get(count - 1).getMoreAvatars
+>>>>>>> 86640900e0b50d8f21ec5f1b6b8a216483ef7f93
                     }
 
                     function removeGetAvatars() {
@@ -577,12 +635,16 @@ Rectangle {
                             imageUrl: url
                             border.color: container.highlighted ? style.colors.blueHighlight : 'transparent'
                             border.width: container.highlighted ? 2 : 0
-                            wearablesCount: (wearables && wearables !== '') ? wearables.split('|').length : 0
+                            wearablesCount: (!getMoreAvatars && wearables && wearables !== '') ? wearables.split('|').length : 0
                             onWearablesCountChanged: {
                                 console.debug('delegate: AvatarThumbnail.wearablesCount: ', wearablesCount)
                             }
 
+<<<<<<< HEAD
                             visible: name !== ''
+=======
+                            visible: !getMoreAvatars
+>>>>>>> 86640900e0b50d8f21ec5f1b6b8a216483ef7f93
 
                             MouseArea {
                                 id: favoriteAvatarMouseArea
@@ -675,7 +737,11 @@ Rectangle {
                             height: 92
                             radius: 5
                             color: style.colors.blueHighlight
+<<<<<<< HEAD
                             visible: name === '' && !isInManageState
+=======
+                            visible: getMoreAvatars && !isInManageState
+>>>>>>> 86640900e0b50d8f21ec5f1b6b8a216483ef7f93
 
                             HiFiGlyphs {
                                 anchors.centerIn: parent
@@ -721,8 +787,13 @@ Rectangle {
                         verticalAlignment: Text.AlignTop
                         horizontalAlignment: Text.AlignHCenter
                         wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+<<<<<<< HEAD
                         text: name !== '' ? name : 'Get More Avatars'
                         visible: name !== '' || !isInManageState
+=======
+                        text: getMoreAvatars ? 'Get More Avatars' : name
+                        visible: !getMoreAvatars || !isInManageState
+>>>>>>> 86640900e0b50d8f21ec5f1b6b8a216483ef7f93
                     }
                 }
             }
@@ -786,13 +857,6 @@ Rectangle {
 
         // color: 'green'
         visible: false
-        onVisibleChanged: {
-            if(visible) {
-                console.debug('selectedAvatar.wearables: ', selectedAvatar.wearables)
-                selectedAvatar.wearables = 'hat|sunglasses|bracelet'
-                pageOfAvatars.setProperty(view.currentIndex, 'wearables', selectedAvatar.wearables)
-            }
-        }
 
         Rectangle {
             width: 442
@@ -835,10 +899,16 @@ Rectangle {
                         var url = allAvatars.urls[i++ % allAvatars.urls.length]
 
                         var avatar = {
+<<<<<<< HEAD
                             'url': url,
                             'name': 'Lexi' + (++newAvatarIndex),
                             'wearables': '',
                             'favorite': true
+=======
+                            'url': Qt.resolvedUrl(url),
+                            'name': 'Lexi' + (++newAvatarIndex),
+                            'wearables': 'hat|sunglasses|bracelet'
+>>>>>>> 86640900e0b50d8f21ec5f1b6b8a216483ef7f93
                         };
 
                         allAvatars.append(avatar)

@@ -18,12 +18,29 @@ var request = Script.require('request').request;
 var AVATARAPP_QML_SOURCE = "hifi/AvatarApp.qml";
 Script.include("/~/system/libraries/controllers.js");
 
+// constants from AvatarBookmarks.h
+var ENTRY_AVATAR_URL = "avatarUrl";
+var ENTRY_AVATAR_ATTACHMENTS = "attachments";
+var ENTRY_AVATAR_ENTITIES = "avatarEntities";
+var ENTRY_AVATAR_SCALE = "avatarScale";
+var ENTRY_VERSION = "version";
+
 function fromQml(message) { // messages are {method, params}, like json-rpc. See also sendToQml.
     console.debug('fromQml: message = ', JSON.stringify(message, null, '\t'))
 
     switch (message.method) {
-    case 'getFavorites':
-        message.reply = AvatarBookmarks.getBookmarks();
+    case 'getAvatars':
+        var currentAvatar = {}
+        currentAvatar[ENTRY_AVATAR_URL] = MyAvatar.skeletonModelURL;
+        currentAvatar[ENTRY_AVATAR_SCALE] = MyAvatar.getAvatarScale();
+        currentAvatar[ENTRY_AVATAR_ATTACHMENTS] = MyAvatar.getAttachmentsVariant();
+        currentAvatar[ENTRY_AVATAR_ENTITIES] = MyAvatar.getAvatarEntitiesVariant();
+
+        message.reply = {
+            'bookmarks' : AvatarBookmarks.getBookmarks(),
+            'currentAvatar' : currentAvatar
+        };
+
         sendToQml(message)
         break;
     default:

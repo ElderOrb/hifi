@@ -254,8 +254,6 @@ void AvatarBookmarks::addBookmark() {
         Bookmarks::addBookmarkToFile(bookmarkName, bookmark);
     });
 
-}
-
 QVariantMap AvatarBookmarks::getAvatarDataToBookmark() {
     auto myAvatar = DependencyManager::get<AvatarManager>()->getMyAvatar();
 
