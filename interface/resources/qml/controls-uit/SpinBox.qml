@@ -34,6 +34,10 @@ SpinBox {
     property real maximumValue: 0.0
 
     property real realValue: 0.0
+    onRealValueChanged: {
+        console.debug('onRealValueChanged: realValue: ', realValue)
+    }
+
     property real realFrom: 0.0
     property real realTo: 100.0
     property real realStepSize: 1.0
@@ -52,11 +56,14 @@ SpinBox {
 
     locale: Qt.locale("en_US")
 
-    onValueModified: realValue = value/factor
-    onValueChanged: realValue = value/factor
+    // onValueModified: realValue = value/factor
+    onValueChanged: {
+        console.debug('onValueChanged: value: ', value, 'realValue: ', value/factor, 'value: ', value/factor * factor);
+        realValue = value/factor
+    }
 
     stepSize: realStepSize*factor
-    value: realValue*factor
+    value: Math.round(realValue*factor)
     to : realTo*factor
     from : realFrom*factor
 
