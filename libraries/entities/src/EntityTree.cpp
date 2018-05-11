@@ -623,8 +623,6 @@ void EntityTree::unhookChildAvatar(const EntityItemID entityID) {
             child->setParentID(nullptr);
         }
     });
-
-    entity->setParentID(nullptr);
 }
 
 void EntityTree::deleteEntities(QSet<EntityItemID> entityIDs, bool force, bool ignoreWarnings) {

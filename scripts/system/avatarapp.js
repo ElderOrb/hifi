@@ -28,18 +28,11 @@ var ENTRY_VERSION = "version";
 function getMyAvatarWearables() {
     var wearablesArray = MyAvatar.getAvatarEntitiesVariant();
 
-    console.debug('avatarapp.js: getMyAvatarWearables(): wearables count: ', wearablesArray.length);
+    // console.debug('avatarapp.js: getMyAvatarWearables(): wearables count: ', wearablesArray.length);
     for(var i = 0; i < wearablesArray.length; ++i) {
         var wearable = wearablesArray[i];
-        console.debug('updating localRotationAngles for wearable: ',
-                      wearable.properties.id,
-                      wearable.properties.itemName,
-                      wearable.properties.parentID,
-                      wearable.properties.owningAvatarID,
-                      isGrabbable(wearable.properties.id));
-
         var localRotation = wearable.properties.localRotation;
-        wearable.properties.localRotationAngles = Quat.safeEulerAngles(localRotation)
+        wearable.properties.localRotationAngles = Quat.safeEulerAngles(localRotation);
     }
 
     return wearablesArray;
@@ -65,7 +58,7 @@ function getMyAvatar() {
     avatar[ENTRY_AVATAR_SCALE] = MyAvatar.getAvatarScale();
     avatar[ENTRY_AVATAR_ATTACHMENTS] = MyAvatar.getAttachmentsVariant();
     avatar[ENTRY_AVATAR_ENTITIES] = getMyAvatarWearables();
-    console.debug('getMyAvatar: ', JSON.stringify(avatar, null, 4));
+    //console.debug('getMyAvatar: ', JSON.stringify(avatar, null, 4));
 
     return avatar;
 }
@@ -79,10 +72,10 @@ var adjustWearables = {
     cameraMode : '',
     setOpened : function(value) {
         if(this.opened !== value) {
-            console.debug('avatarapp.js: adjustWearables.setOpened: ', value)
+            // console.debug('avatarapp.js: adjustWearables.setOpened: ', value)
             if(value) {
                 this.cameraMode = Camera.mode;
-                console.debug('avatarapp.js: adjustWearables.setOpened: storing camera mode: ', this.cameraMode);
+                // console.debug('avatarapp.js: adjustWearables.setOpened: storing camera mode: ', this.cameraMode);
 
                 if(!HMD.active) {
                     Camera.mode = 'mirror';
@@ -102,7 +95,7 @@ var selectedAvatarEntityGrabbable = false;
 var selectedAvatarEntity = null;
 
 function fromQml(message) { // messages are {method, params}, like json-rpc. See also sendToQml.
-    console.debug('fromQml: message = ', JSON.stringify(message, null, '\t'))
+    // console.debug('fromQml: message = ', JSON.stringify(message, null, '\t'))
 
     switch (message.method) {
     case 'getAvatars':
@@ -112,7 +105,7 @@ function fromQml(message) { // messages are {method, params}, like json-rpc. See
             'currentAvatar' : currentAvatar
         };
 
-        console.debug('avatarapp.js: currentAvatar: ', JSON.stringify(message.reply.currentAvatar, null, '\t'))
+        /// console.debug('avatarapp.js: currentAvatar: ', JSON.stringify(message.reply.currentAvatar, null, '\t'))
         sendToQml(message)
         break;
     case 'adjustWearable':
@@ -120,12 +113,12 @@ function fromQml(message) { // messages are {method, params}, like json-rpc. See
             message.properties.localRotation = Quat.fromVec3Degrees(message.properties.localRotationAngles)
         }
 
-        console.debug('Entities.editEntity(message.entityID, message.properties)'.replace('message.entityID', message.entityID).replace('message.properties', JSON.stringify(message.properties)));
+        // console.debug('Entities.editEntity(message.entityID, message.properties)'.replace('message.entityID', message.entityID).replace('message.properties', JSON.stringify(message.properties)));
         Entities.editEntity(message.entityID, message.properties);
         sendToQml({'method' : 'wearableUpdated', 'wearable' : message.entityID, wearableIndex : message.wearableIndex, properties : message.properties})
         break;
     case 'selectAvatar':
-        console.debug('avatarapp.js: selecting avatar: ', message.name);
+        // console.debug('avatarapp.js: selecting avatar: ', message.name);
         AvatarBookmarks.loadBookmark(message.name);
         break;
     case 'adjustWearablesOpened':
@@ -134,13 +127,17 @@ function fromQml(message) { // messages are {method, params}, like json-rpc. See
         Entities.mousePressOnEntity.connect(onSelectedEntity);
         break;
     case 'adjustWearablesClosed':
+        var bookmark = message.avatarName;
+        print("---------> avatarName: " + bookmark);
         if(!message.save) {
             // revert changes using snapshot of wearables
-            console.debug('reverting... ');
+            // console.debug('reverting... ');
             if(currentAvatarWearablesBackup !== null) {
-                AvatarBookmarks.updateAvatarEntities(currentAvatarWearablesBackup);
                 sendToQml({'method' : 'wearablesUpdated', 'wearables' : currentAvatarWearablesBackup, 'avatarName' : message.avatarName})
             }
+        } else {
+            print("AvatarName: " + message.avatarName);
+            AvatarBookmarks.saveBookmark(message.avatarName);
         }
 
         adjustWearables.setOpened(false);
@@ -151,15 +148,12 @@ function fromQml(message) { // messages are {method, params}, like json-rpc. See
         ensureWearableSelected(message.entityID);
         break;
     case 'deleteWearable':
-        console.debug('before deleting: wearables.length: ', getMyAvatarWearables().length);
-        console.debug(JSON.stringify(Entities.getEntityProperties(message.entityID, ['parentID'])));
-
-        Entities.editEntity(message.entityID, { parentID : null }) // 2do: remove this hack when backend will be fixed
-        console.debug(JSON.stringify(Entities.getEntityProperties(message.entityID, ['parentID'])));
+        // console.debug('before deleting: wearables.length: ', getMyAvatarWearables().length);
+        // console.debug(JSON.stringify(Entities.getEntityProperties(message.entityID, ['parentID'])));
 
         Entities.deleteEntity(message.entityID);
         var wearables = getMyAvatarWearables();
-        console.debug('after deleting: wearables.length: ', wearables.length);
+        // console.debug('after deleting: wearables.length: ', wearables.length);
 
         updateAvatarWearables(currentAvatar, wearables);
         sendToQml({'method' : 'wearablesUpdated', 'wearables' : wearables, 'avatarName' : message.avatarName})
@@ -190,7 +184,7 @@ function isGrabbable(entityID) {
 }
 
 function setGrabbable(entityID, grabbable) {
-    console.debug('making entity', entityID, grabbable ? 'grabbable' : 'not grabbable');
+    // console.debug('making entity', entityID, grabbable ? 'grabbable' : 'not grabbable');
 
     var properties = Entities.getEntityProperties(entityID, ['clientOnly', 'userData']);
     if (properties.clientOnly) {
@@ -235,7 +229,7 @@ function isEntityBeingWorn(entityID) {
 
 function onSelectedEntity(entityID, pointerEvent) {
     if (isEntityBeingWorn(entityID)) {
-        console.debug('onSelectedEntity: clicked on wearable', entityID);
+        //console.debug('onSelectedEntity: clicked on wearable', entityID);
 
         if(ensureWearableSelected(entityID)) {
             sendToQml({'method' : 'selectAvatarEntity', 'entityID' : selectedAvatarEntity});
@@ -244,13 +238,13 @@ function onSelectedEntity(entityID, pointerEvent) {
 }
 
 function sendToQml(message) {
-    console.debug('avatarapp.js: sendToQml: ', JSON.stringify(message, 0, 4));
+    // console.debug('avatarapp.js: sendToQml: ', JSON.stringify(message, 0, 4));
     tablet.sendToQml(message);
 }
 
 function onBookmarkLoaded(bookmarkName) {
     currentAvatar = getMyAvatar();
-    console.debug('avatarapp.js: onBookmarkLoaded: ', JSON.stringify(currentAvatar, 0, 4));
+    //console.debug('avatarapp.js: onBookmarkLoaded: ', JSON.stringify(currentAvatar, 0, 4));
     sendToQml({'method' : 'bookmarkLoaded', 'reply' : {'name' : bookmarkName, 'currentAvatar' : currentAvatar} });
 }
 
@@ -322,13 +316,13 @@ var hasEventBridge = false;
 function wireEventBridge(on) {
     if (on) {
         if (!hasEventBridge) {
-            console.debug('tablet.fromQml.connect')
+            // console.debug('tablet.fromQml.connect')
             tablet.fromQml.connect(fromQml);
             hasEventBridge = true;
         }
     } else {
         if (hasEventBridge) {
-            console.debug('tablet.fromQml.disconnect')
+            // console.debug('tablet.fromQml.disconnect')
             tablet.fromQml.disconnect(fromQml);
             hasEventBridge = false;
         }
@@ -336,7 +330,7 @@ function wireEventBridge(on) {
 }
 
 function onTabletScreenChanged(type, url) {
-    console.debug('avatarapp.js: onTabletScreenChanged: ', type, url);
+    // console.debug('avatarapp.js: onTabletScreenChanged: ', type, url);
 
     onAvatarAppScreen = (type === "QML" && url === AVATARAPP_QML_SOURCE);
     wireEventBridge(onAvatarAppScreen);
@@ -355,7 +349,7 @@ function onTabletScreenChanged(type, url) {
         sendToQml(message)
     }
 
-    console.debug('onAvatarAppScreen: ', onAvatarAppScreen);
+    // console.debug('onAvatarAppScreen: ', onAvatarAppScreen);
 
     // disable sphere overlays when not on avatarapp screen.
     if (!onAvatarAppScreen) {
@@ -364,7 +358,7 @@ function onTabletScreenChanged(type, url) {
 }
 
 function shutdown() {
-    console.debug('shutdown: adjustWearables.opened', adjustWearables.opened);
+    // console.debug('shutdown: adjustWearables.opened', adjustWearables.opened);
 
     if (onAvatarAppScreen) {
         tablet.gotoHomeScreen();

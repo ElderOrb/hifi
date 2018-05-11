@@ -214,6 +214,7 @@ Rectangle {
         anchors.top: header.bottom
         anchors.bottom: parent.bottom
         jointNames: root.jointNames
+        avatarName: root.selectedAvatar.name
         onWearableUpdated: {
             emitSendToScript({'method' : 'adjustWearable', 'entityID' : id, 'wearableIndex' : index, 'properties' : properties})
         }
@@ -224,6 +225,7 @@ Rectangle {
             emitSendToScript({'method' : 'adjustWearablesOpened', 'avatarName' : avatarName});
         }
         onAdjustWearablesClosed: {
+            console.log("-----> " + avatarName);
             emitSendToScript({'method' : 'adjustWearablesClosed', 'save' : status, 'avatarName' : avatarName});
         }
         onWearableSelected: {
@@ -543,6 +545,7 @@ Rectangle {
                 property int verticalSpacing: 36
 
                 function selectAvatar(avatar) {
+                    root.avatarName = avatar.name;
                     emitSendToScript({'method' : 'selectAvatar', 'name' : avatar.name})
                 }
 

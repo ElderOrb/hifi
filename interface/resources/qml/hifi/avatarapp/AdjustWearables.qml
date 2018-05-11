@@ -33,7 +33,7 @@ Rectangle {
 
     function open(avatar) {
         adjustWearablesOpened();
-        console.debug('AdjustWearables.qml: open: ', JSON.stringify(avatar, null, '\t'));
+        //console.debug('AdjustWearables.qml: open: ', JSON.stringify(avatar, null, '\t'));
 
         visible = true;
         avatarName = avatar.name;
@@ -42,21 +42,21 @@ Rectangle {
     }
 
     function refresh(avatar) {
-        console.debug('refresh: ');
+        //console.debug('refresh: ');
         for(var i = 0; i < avatar.wearables.count; ++i) {
-            console.debug('wearable: ', avatar.wearables.get(i).properties.id);
+            //console.debug('wearable: ', avatar.wearables.get(i).properties.id);
         }
 
         wearablesCombobox.model.clear();
-        console.debug('AdjustWearables.qml: open: avatar.wearables.count: ', avatar.wearables.count);
+        //console.debug('AdjustWearables.qml: open: avatar.wearables.count: ', avatar.wearables.count);
         for(var i = 0; i < avatar.wearables.count; ++i) {
             var wearable = avatar.wearables.get(i).properties;
-            console.debug('wearable: ', JSON.stringify(wearable, null, '\t'))
+            //console.debug('wearable: ', JSON.stringify(wearable, null, '\t'))
 
             for(var j = (wearable.modelURL.length - 1); j >= 0; --j) {
                 if(wearable.modelURL[j] === '/') {
                     wearable.text = wearable.modelURL.substring(j + 1) + ' [%jointIndex%]'.replace('%jointIndex%', jointNames[wearable.parentJointIndex]);
-                    console.debug('wearable.text = ', wearable.text);
+                    // console.debug('wearable.text = ', wearable.text);
                     break;
                 }
             }
@@ -76,15 +76,15 @@ Rectangle {
             wearablesModelProps[prop] = properties[prop];
             wearablesModel.setProperty(wearableIndex, 'properties', wearablesModelProps);
 
-            console.debug('updated wearable', prop,
+           /* console.debug('updated wearable', prop,
                           'old = ', JSON.stringify(wearable[prop], 0, 4),
                           'new = ', JSON.stringify(properties[prop], 0, 4),
                           'model = ', JSON.stringify(wearablesCombobox.model.get(wearableIndex)[prop]),
                           'wearablesModel = ', JSON.stringify(wearablesModel.get(wearableIndex).properties[prop], 0, 4)
-                          );
+                          );*/
         }
 
-        console.debug('wearablesModel.get(wearableIndex).properties: ', JSON.stringify(wearablesModel.get(wearableIndex).properties, 0, 4))
+        //console.debug('wearablesModel.get(wearableIndex).properties: ', JSON.stringify(wearablesModel.get(wearableIndex).properties, 0, 4))
     }
 
     function getCurrentWearable() {
@@ -135,7 +135,7 @@ Rectangle {
             }
 
             comboBox.onCurrentIndexChanged: {
-                console.debug('wearable index changed: ', currentIndex);
+                //console.debug('wearable index changed: ', currentIndex);
 
                 var currentWearable = getCurrentWearable();
 
@@ -144,19 +144,19 @@ Rectangle {
                     position.xvalue = currentWearable.localPosition.x
                     position.yvalue = currentWearable.localPosition.y
                     position.zvalue = currentWearable.localPosition.z
-                    console.debug('currentWearable.localPosition = ', JSON.stringify(currentWearable.localPosition, 0, 4))
+                    //console.debug('currentWearable.localPosition = ', JSON.stringify(currentWearable.localPosition, 0, 4))
                     position.notify = true;
 
                     rotation.notify = false;
                     rotation.xvalue = currentWearable.localRotationAngles.x
                     rotation.yvalue = currentWearable.localRotationAngles.y
                     rotation.zvalue = currentWearable.localRotationAngles.z
-                    console.debug('currentWearable.localRotationAngles = ', JSON.stringify(currentWearable.localRotationAngles, 0, 4))
+                    //console.debug('currentWearable.localRotationAngles = ', JSON.stringify(currentWearable.localRotationAngles, 0, 4))
                     rotation.notify = true;
 
                     scalespinner.notify = false;
                     scalespinner.realValue = currentWearable.dimensions.x / currentWearable.naturalDimensions.x
-                    console.debug('currentWearable.scale = ', scalespinner.realValue)
+                    //console.debug('currentWearable.scale = ', scalespinner.realValue)
                     scalespinner.notify = true;
 
                     wearableSelected(currentWearable.id);
