@@ -12,7 +12,7 @@ Rectangle {
 	height: 706
     color: style.colors.white
     property string getAvatarsMethod: 'getAvatars'
-
+    property string currentBookmark: ''
     signal sendToScript(var message);
     function emitSendToScript(message) {
         console.debug('AvatarApp.qml: emitting sendToScript: ', JSON.stringify(message, null, '\t'));
@@ -42,12 +42,12 @@ Rectangle {
         };
 
         currentAvatar = currentAvatarModel.makeAvatarEntry(currentAvatarObject);
-        console.debug('AvatarApp.qml: currentAvatarObject: ', currentAvatarObject, 'currentAvatar: ', currentAvatar, JSON.stringify(currentAvatar.wearables, 0, 4));
-        console.debug('currentAvatar.wearables: ', currentAvatar.wearables);
+        //console.debug('AvatarApp.qml: currentAvatarObject: ', currentAvatarObject, 'currentAvatar: ', currentAvatar, JSON.stringify(currentAvatar.wearables, 0, 4));
+        // console.debug('currentAvatar.wearables: ', currentAvatar.wearables);
     }
 
     function fromScript(message) {
-        console.debug('AvatarApp.qml: fromScript: ', JSON.stringify(message, null, '\t'))
+        // console.debug('AvatarApp.qml: fromScript: ', JSON.stringify(message, null, '\t'))
 
         if(message.method === 'initialize') {
             jointNames = message.reply.jointNames;
@@ -57,7 +57,7 @@ Rectangle {
         } else if(message.method === 'wearablesUpdated') {
             var wearablesModel = currentAvatarModel.get(0).wearables;
 
-            console.debug('handling wearablesUpdated, new wearables count:', message.wearables.length, ': old wearables: ');
+            // console.debug('handling wearablesUpdated, new wearables count:', message.wearables.length, ': old wearables: ');
             for(var i = 0; i < wearablesModel.count; ++i) {
                 console.debug('wearable: ', wearablesModel.get(i).properties.id);
             }
@@ -67,9 +67,9 @@ Rectangle {
                 wearablesModel.append(wearable);
             });
 
-            console.debug('handling wearablesUpdated: new wearables: ');
+            // console.debug('handling wearablesUpdated: new wearables: ');
             for(var i = 0; i < wearablesModel.count; ++i) {
-                console.debug('wearable: ', wearablesModel.get(i).properties.id);
+                // console.debug('wearable: ', wearablesModel.get(i).properties.id);
             }
 
             adjustWearables.refresh(root.currentAvatar);
@@ -84,11 +84,11 @@ Rectangle {
             allAvatars.populate(getAvatarsReply.bookmarks);
 
             var currentAvatar = getAvatarsReply.currentAvatar;
-            console.debug('currentAvatar: ', JSON.stringify(currentAvatar, null, '\t'));
+            // console.debug('currentAvatar: ', JSON.stringify(currentAvatar, null, '\t'));
             var selectedAvatarIndex = -1;
 
             // 2DO: find better way of determining selected avatar in bookmarks
-            console.debug('allAvatars.count: ', allAvatars.count);
+            // console.debug('allAvatars.count: ', allAvatars.count);
             for(var i = 0; i < allAvatars.count; ++i) {
                 var thesame = true;
                 for(var prop in currentAvatar) {
@@ -116,7 +116,7 @@ Rectangle {
                 }
             }
 
-            console.debug('selectedAvatarIndex = -1, avatar is not favorite')
+            // console.debug('selectedAvatarIndex = -1, avatar is not favorite')
 
             setCurrentAvatar(currentAvatar);
 
@@ -124,7 +124,7 @@ Rectangle {
                 selectedAvatar = root.currentAvatar;
                 view.setPage(0);
 
-                console.debug('selectedAvatar = ', JSON.stringify(selectedAvatar, null, '\t'))
+                // console.debug('selectedAvatar = ', JSON.stringify(selectedAvatar, null, '\t'))
             } else {
                 view.selectAvatar(allAvatars.get(selectedAvatarIndex));
             }
@@ -225,8 +225,8 @@ Rectangle {
             emitSendToScript({'method' : 'adjustWearablesOpened', 'avatarName' : avatarName});
         }
         onAdjustWearablesClosed: {
-            console.log("-----> " + avatarName);
-            emitSendToScript({'method' : 'adjustWearablesClosed', 'save' : status, 'avatarName' : avatarName});
+            console.log("-----> " + root.currentBookmark);
+            emitSendToScript({'method' : 'adjustWearablesClosed', 'save' : status, 'avatarName' : root.currentBookmark});
         }
         onWearableSelected: {
             emitSendToScript({'method' : 'selectWearable', 'entityID' : id});
@@ -545,7 +545,7 @@ Rectangle {
                 property int verticalSpacing: 36
 
                 function selectAvatar(avatar) {
-                    root.avatarName = avatar.name;
+                    root.currentBookmark = avatar.name;
                     emitSendToScript({'method' : 'selectAvatar', 'name' : avatar.name})
                 }
 
@@ -714,7 +714,7 @@ Rectangle {
 
                                         popup.onButton2Clicked = function() {
                                             popup.close();
-
+                                            AvatarBookmarks.removeBookmark(currentItem.name);
                                             pageOfAvatars.isUpdating = true;
 
                                             console.debug('removing ', index)
