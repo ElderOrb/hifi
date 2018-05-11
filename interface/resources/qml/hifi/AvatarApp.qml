@@ -225,7 +225,6 @@ Rectangle {
             emitSendToScript({'method' : 'adjustWearablesOpened', 'avatarName' : avatarName});
         }
         onAdjustWearablesClosed: {
-            console.log("-----> " + root.currentBookmark);
             emitSendToScript({'method' : 'adjustWearablesClosed', 'save' : status, 'avatarName' : root.currentBookmark});
         }
         onWearableSelected: {
