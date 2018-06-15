@@ -2,8 +2,8 @@ import QtQuick 2.7
 import QtQuick.Controls 2.3
 import QtQuick.Dialogs 1.2 as OriginalDialogs
 
-import "../../../styles-uit"
-import "../../../controls-uit" as HifiControls
+import stylesUit 1.0
+import controlsUit 1.0 as HifiControls
 import "../../../windows"
 import "../attachments"
 

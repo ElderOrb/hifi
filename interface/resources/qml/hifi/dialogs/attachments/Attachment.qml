@@ -3,8 +3,8 @@ import QtQuick 2.5
 import "."
 import ".."
 import "../../tablet"
-import "../../../styles-uit"
-import "../../../controls-uit" as HifiControls
+import stylesUit 1.0
+import controlsUit 1.0 as HifiControls
 import "../../../windows"
 
 Item {
