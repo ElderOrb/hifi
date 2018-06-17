@@ -309,7 +309,7 @@ Rectangle {
                 Key {
                     width: 70
                     glyph: "123"
-                    mouseArea.onClicked: keyboardBase.parent.punctuationMode = true
+                    mouseArea.onClicked: keyboardBase.parent.parent.punctuationMode = true
                 }
                 Key { width: 231; glyph: " "; }
                 Key { width: 43; glyph: ","; }
@@ -402,7 +402,7 @@ Rectangle {
                 Key {
                     width: 70
                     glyph: "abc"
-                    mouseArea.onClicked: keyboardBase.parent.punctuationMode = false
+                    mouseArea.onClicked: keyboardBase.parent.parent.punctuationMode = false
                 }
                 Key { width: 231; glyph: " "; }
                 Key { width: 43; glyph: ","; }
