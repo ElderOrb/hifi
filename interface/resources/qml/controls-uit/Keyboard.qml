@@ -13,17 +13,17 @@ Rectangle {
         console.debug('keyboard: ', keyboard, 'onHeightChanged: ', height);        
     }
 
-    property bool raised;
+    property bool raised: false;
     onRaisedChanged: {
         console.debug('keyboard: ', keyboard, 'onRaisedChanged: ', raised);
     }
 
-    property bool password;
+    property bool password: false;
     onPasswordChanged: {
         console.debug('keyboard: ', keyboard, 'onPasswordChanged: ', password);
     }
 
-    property bool numeric;
+    property bool numeric: false;
     onNumericChanged: {
         console.debug('keyboard: ', keyboard, 'onNumericChanged: ', numeric);
     }
@@ -35,6 +35,10 @@ Rectangle {
 
     function resetShiftMode(mode) {
         console.debug('keyboard: ', keyboard, 'resetShiftMode stub called: ', mode);
+    }
+
+    onVisibleChanged: {
+        console.debug('keyboard: ', keyboard, 'onVisibleChanged: ', visible);
     }
 
     onChildrenChanged: {
