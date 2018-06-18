@@ -709,7 +709,7 @@ static void outputParents(QQuickItem* item) {
     }
 }
 
-static QQuickItem* findNearestKeyboard(QQuickItem *focusItem, QQuickItem** keyboardContainer = nullptr) {
+QQuickItem* OffscreenQmlSurface::findNearestKeyboard(QQuickItem *focusItem, QQuickItem** keyboardContainer /*= nullptr*/) {
 
     QQuickItem* item = focusItem;
     QQuickItem* visited = nullptr;
@@ -758,6 +758,10 @@ void OffscreenQmlSurface::setKeyboardRaised(QObject* object, bool raised) {
         return;
     }
 
+    if (raised && !qApp->property(hifi::properties::HMD).toBool()) {
+        return;
+    }
+
 #if !defined(Q_OS_ANDROID)
 
     auto focusObject = object;
@@ -794,12 +798,6 @@ void OffscreenQmlSurface::setKeyboardRaised(QObject* object, bool raised) {
                 keyboardContainer->setProperty("punctuationMode", numeric);
             }
 
-            /*
-            if (keyboardContainer->property("passwordField").isValid()) {
-                keyboardContainer->setProperty("passwordField", QVariant(passwordField));
-            }
-            */
-
             thekeyboard->setParentItem(keyboard);
             thekeyboard->setProperty("raised", true);
 
@@ -820,6 +818,10 @@ void OffscreenQmlSurface::setKeyboardRaised(QObject* object, bool raised, bool n
         return;
     }
 
+    if (raised && !qApp->property(hifi::properties::HMD).toBool()) {
+        return;
+    }
+
 #if !defined(Q_OS_ANDROID)
 
     auto focusObject = object;
@@ -837,15 +839,22 @@ void OffscreenQmlSurface::setKeyboardRaised(QObject* object, bool raised, bool n
     auto quickItem = qobject_cast<QQuickItem*>(focusObject);
     if (quickItem && raised)
     {
-        auto keyboard = findNearestKeyboard(qobject_cast<QQuickItem*> (focusObject));
+        QQuickItem* keyboardContainer = nullptr;
+        auto keyboard = findNearestKeyboard(qobject_cast<QQuickItem*> (focusObject), &keyboardContainer);
         qDebug() << "focusObject: " << focusObject;
 
         if (keyboard) {
             qDebug() << "keyboard found: " << keyboard << "parent: " << keyboard->parent();
 
+            if (keyboardContainer->property("punctuationMode").isValid()) {
+                keyboardContainer->setProperty("punctuationMode", numeric);
+            }
+
+            if (keyboardContainer->property("passwordField").isValid()) {
+                keyboardContainer->setProperty("passwordField", QVariant(passwordField));
+            }
+
             thekeyboard->setParentItem(keyboard);
-            thekeyboard->setProperty("numeric", numeric);
-            thekeyboard->setProperty("passwordField", passwordField);
             thekeyboard->setProperty("raised", true);
 
             return;
