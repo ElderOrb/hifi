@@ -798,14 +798,17 @@ void OffscreenQmlSurface::setKeyboardRaised(QObject* object, bool raised) {
                 keyboardContainer->setProperty("punctuationMode", numeric);
             }
 
-            thekeyboard->setParentItem(keyboard);
-            thekeyboard->setProperty("raised", true);
+            if (keyboardContainer->property("keyboardRaised").isValid()) {
+                keyboardContainer->setProperty("keyboardRaised", QVariant(true));
+            }
 
+            qDebug() << "attaching keyboard to placeholder...";
+            thekeyboard->setParentItem(keyboard);
             return;
         }
     }
 
-    thekeyboard->setProperty("raised", false);
+    thekeyboard->setParentItem(nullptr);
 
 #endif
 }
@@ -854,52 +857,17 @@ void OffscreenQmlSurface::setKeyboardRaised(QObject* object, bool raised, bool n
                 keyboardContainer->setProperty("passwordField", QVariant(passwordField));
             }
 
-            thekeyboard->setParentItem(keyboard);
-            thekeyboard->setProperty("raised", true);
-
-            return;
-        }
-    }
-
-    thekeyboard->setProperty("raised", false);
-
-	/*
-    // if HMD is being worn, allow keyboard to open.  allow it to close, HMD or not.
-    if (!raised || qApp->property(hifi::properties::HMD).toBool()) {
-        QQuickItem* item = dynamic_cast<QQuickItem*>(object);
-        if (!item) {
-            return;
-        }
-
-        // for future probably makes sense to consider one of the following:
-        // 1. make keyboard a singleton, which will be dynamically re-parented before showing
-        // 2. track currently visible keyboard somewhere, allow to subscribe for this signal
-        // any of above should also eliminate need in duplicated properties and code below
-
-        while (item) {
-            // Numeric value may be set in parameter from HTML UI; for QML UI, detect numeric fields here.
-            numeric = numeric || QString(item->metaObject()->className()).left(7) == "SpinBox";
-
-            if (item->property("keyboardRaised").isValid()) {
-                // FIXME - HMD only: Possibly set value of "keyboardEnabled" per isHMDMode() for use in WebView.qml.
-                if (item->property("punctuationMode").isValid()) {
-                    item->setProperty("punctuationMode", QVariant(numeric));
-                }
-                if (item->property("passwordField").isValid()) {
-                    item->setProperty("passwordField", QVariant(passwordField));
-                }
-
-                if (raised) {
-                    item->setProperty("keyboardRaised", QVariant(!raised));
-                }
-
-                item->setProperty("keyboardRaised", QVariant(raised));
-                return;
+            if (keyboardContainer->property("keyboardRaised").isValid()) {
+                keyboardContainer->setProperty("keyboardRaised", QVariant(true));
             }
-            item = dynamic_cast<QQuickItem*>(item->parentItem());
+
+            qDebug() << "attaching keyboard to placeholder...";
+            thekeyboard->setParentItem(keyboard);
+            return;
         }
     }
-    */
+
+    thekeyboard->setParentItem(nullptr);
 
 #endif
 }
