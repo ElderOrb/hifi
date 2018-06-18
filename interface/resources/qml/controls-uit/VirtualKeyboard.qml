@@ -77,16 +77,17 @@ Rectangle {
 
     readonly property int keyboardRowHeight: 50
     readonly property int keyboardWidth: 480
+    readonly property int keyboardHeight: 200
 
     readonly property int mirrorTextHeight: keyboardRowHeight
 
     property bool password: false
     property alias mirroredText: mirrorText.text
     property bool showMirrorText: true
-    readonly property int raisedHeight: 200
+    readonly property int raisedHeight: keyboardHeight + (showMirrorText ? keyboardRowHeight : 0)
 
     width: keyboardWidth
-    height: enabled && raised ? raisedHeight + (showMirrorText ? keyboardRowHeight : 0) : 0
+    height: enabled && raised ? raisedHeight : 0
 
     onHeightChanged: {
         console.debug('virtualkeyboard height: ', height)
@@ -221,7 +222,7 @@ Rectangle {
         id: keyboardRect
         y: showMirrorText ? mirrorTextHeight : 0
         width: keyboardWidth
-        height: raisedHeight
+        height: keyboardHeight
         color: "#252525"
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
@@ -230,7 +231,7 @@ Rectangle {
         Column {
             id: columnAlpha
             width: keyboardWidth
-            height: raisedHeight
+            height: keyboardHeight
             visible: !numeric
 
             Row {
@@ -322,7 +323,7 @@ Rectangle {
         Column {
             id: columnNumeric
             width: keyboardWidth
-            height: raisedHeight
+            height: keyboardHeight
             visible: numeric
 
             Row {
