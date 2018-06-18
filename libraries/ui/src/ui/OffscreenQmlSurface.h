@@ -31,6 +31,8 @@ public:
     bool getCleaned() { return _isCleaned; }
 
     bool eventFilter(QObject* originalDestination, QEvent* event) override;
+    static QQuickItem* findNearestKeyboard(QQuickItem *focusItem, QQuickItem** keyboardContainer = nullptr);
+
     void setKeyboardRaised(QObject* object, bool raised);
     void setKeyboardRaised(QObject* object, bool raised, bool numeric, bool passwordField);
     Q_INVOKABLE void synthesizeKeyPress(QString key, QObject* targetOverride = nullptr);
