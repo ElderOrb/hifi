@@ -210,10 +210,12 @@ void QmlWindowClass::setKeyboardRaised(QObject* object, bool raised, bool numeri
                 keyboardContainer->setProperty("punctuationMode", numeric);
             }
 
-            thekeyboard->setProperty("raised", true);
-            thekeyboard->setParentItem(keyboard);
+            if (keyboardContainer->property("keyboardRaised").isValid()) {
+                keyboardContainer->setProperty("keyboardRaised", QVariant(true));
+            }
 
             qDebug() << "attaching keyboard to placeholder...";
+            thekeyboard->setParentItem(keyboard);
             return;
         }
         else {
@@ -222,7 +224,7 @@ void QmlWindowClass::setKeyboardRaised(QObject* object, bool raised, bool numeri
     }
 
     qDebug() << "hiding keyboard.. ";
-    thekeyboard->setProperty("raised", false);
+    thekeyboard->setParentItem(nullptr);
 }
 
 QmlWindowClass::~QmlWindowClass() {

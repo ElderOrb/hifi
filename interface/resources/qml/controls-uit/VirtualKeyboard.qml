@@ -24,11 +24,13 @@ Rectangle {
             anchors.right = Qt.binding(function() { return parent.right });
             numeric = Qt.binding(function() { return parent.numeric });
             password = Qt.binding(function() { return parent.password });
+            raised = Qt.binding(function() { return parent.raised });
         } else {
             anchors.left = undefined;
             anchors.right = undefined;
             numeric = false;
             password = false;
+            raised = false;
         }
     }
 
@@ -38,13 +40,6 @@ Rectangle {
         value: parent.right
     }
     */
-
-    Binding {
-        target: parent
-        when: parent
-        property: "raised"
-        value: raised
-    }
 
     Binding {
         target: parent
