@@ -25,7 +25,7 @@ Rectangle {
     signal sendToScript(var message);
     property bool keyboardEnabled: false
     property bool punctuationMode: false
-    property bool keyboardRasied: false
+    property bool keyboardRaised: false
 
     function errorMessageBox(message) {
         return desktop.messageBox({
@@ -68,7 +68,8 @@ Rectangle {
             font.pixelSize: 12
 
             onAccepted: {
-                newModelDialog.keyboardEnabled = false;
+                newModelDialog.keyboardRaised = false;
+                focus = false;
             }
 
             onTextChanged : {
@@ -82,7 +83,6 @@ Rectangle {
             MouseArea {
                 anchors.fill: parent
                 onClicked: {
-                    newModelDialog.keyboardEnabled = HMD.active
                     parent.focus = true;
                     parent.forceActiveFocus();
                     modelURL.cursorPosition = modelURL.positionAt(mouseX, mouseY, TextInput.CursorBetweenCharaters);
@@ -242,5 +242,9 @@ Rectangle {
             left: parent.left
             right: parent.right
         }
+    }
+
+    Component.onCompleted: {
+        keyboardEnabled = HMD.active
     }
 }
