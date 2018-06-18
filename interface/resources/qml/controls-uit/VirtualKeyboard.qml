@@ -16,8 +16,9 @@ Rectangle {
     id: keyboardBase
     objectName: "virtualkeyboard"
 
+    property var lastKeybordPlaceholder: null
     onParentChanged: {
-        console.debug('parent: ', parent)
+        console.debug('VirtualKeyboard: parent: ', parent, 'lastKeybordPlaceholder: ', lastKeybordPlaceholder);
 
         if(parent != null) {
             anchors.left = Qt.binding(function() { return parent.left });
@@ -31,7 +32,24 @@ Rectangle {
             numeric = false;
             password = false;
             raised = false;
+
+            if(lastKeybordPlaceholder !== null) {
+                var p = lastKeybordPlaceholder.parent;
+                while(p) {
+                    if(p.hasOwnProperty('keyboardRaised')) {
+                        break;
+                    }
+
+                    p = p.parent;
+                }
+
+                if(p) {
+                    p.keyboardRaised = false;
+                }
+            }
         }
+
+        lastKeybordPlaceholder = parent;
     }
 
     /* for some reasons it doesn't work as it should / results in 'TypeError: Cannot read property of null' errors
