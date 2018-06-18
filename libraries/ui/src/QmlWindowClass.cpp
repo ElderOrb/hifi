@@ -215,6 +215,7 @@ void QmlWindowClass::setKeyboardRaised(QObject* object, bool raised, bool numeri
             }
 
             qDebug() << "attaching keyboard to placeholder...";
+            thekeyboard->setProperty("mirroredText", QVariant(QString()));
             thekeyboard->setParentItem(keyboard);
             return;
         }

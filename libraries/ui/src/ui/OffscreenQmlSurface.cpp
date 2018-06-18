@@ -758,9 +758,11 @@ void OffscreenQmlSurface::setKeyboardRaised(QObject* object, bool raised) {
         return;
     }
 
+    /*
     if (raised && !qApp->property(hifi::properties::HMD).toBool()) {
         return;
     }
+    */
 
 #if !defined(Q_OS_ANDROID)
 
@@ -803,6 +805,7 @@ void OffscreenQmlSurface::setKeyboardRaised(QObject* object, bool raised) {
             }
 
             qDebug() << "attaching keyboard to placeholder...";
+            thekeyboard->setProperty("mirroredText", QVariant(QString()));
             thekeyboard->setParentItem(keyboard);
             return;
         }
@@ -821,9 +824,11 @@ void OffscreenQmlSurface::setKeyboardRaised(QObject* object, bool raised, bool n
         return;
     }
 
+    /*
     if (raised && !qApp->property(hifi::properties::HMD).toBool()) {
         return;
     }
+    */
 
 #if !defined(Q_OS_ANDROID)
 
@@ -862,6 +867,7 @@ void OffscreenQmlSurface::setKeyboardRaised(QObject* object, bool raised, bool n
             }
 
             qDebug() << "attaching keyboard to placeholder...";
+            thekeyboard->setProperty("mirroredText", QVariant(QString()));
             thekeyboard->setParentItem(keyboard);
             return;
         }
