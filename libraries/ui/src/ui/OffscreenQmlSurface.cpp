@@ -225,14 +225,6 @@ void AudioHandler::run() {
 }
 
 OffscreenQmlSurface::~OffscreenQmlSurface() {
-    clearFocusItem();
-}
-
-void OffscreenQmlSurface::clearFocusItem() {
-    if (_currentFocusItem) {
-        disconnect(_currentFocusItem, &QObject::destroyed, this, &OffscreenQmlSurface::focusDestroyed);
-    }
-    _currentFocusItem = nullptr;
 }
 
 void OffscreenQmlSurface::initializeEngine(QQmlEngine* engine) {
@@ -556,13 +548,7 @@ bool OffscreenQmlSurface::handlePointerEvent(const PointerEvent& event, class QT
     return eventSent && eventsAccepted;
 }
 
-void OffscreenQmlSurface::focusDestroyed(QObject* obj) {
-    clearFocusItem();
-}
-
 void OffscreenQmlSurface::onFocusObjectChanged(QObject* object) {
-    clearFocusItem();
-
     QQuickItem* item = static_cast<QQuickItem*>(object);
     if (!item) {
         setFocusText(false);
@@ -572,18 +558,6 @@ void OffscreenQmlSurface::onFocusObjectChanged(QObject* object) {
     QInputMethodQueryEvent query(Qt::ImEnabled);
     qApp->sendEvent(object, &query);
     setFocusText(query.value(Qt::ImEnabled).toBool());
-
-    // Raise and lower keyboard for QML text fields.
-    // HTML text fields are handled in emitWebEvent() methods - testing READ_ONLY_PROPERTY prevents action for HTML files.
-    const char* READ_ONLY_PROPERTY = "readOnly";
-    bool raiseKeyboard = item->hasActiveFocus() && item->property(READ_ONLY_PROPERTY) == false;
-    if (_currentFocusItem && !raiseKeyboard) {
-        setKeyboardRaised(_currentFocusItem, false);
-    }
-    setKeyboardRaised(item, raiseKeyboard);  // Always set focus so that alphabetic / numeric setting is updated.
-
-    _currentFocusItem = item;
-    connect(_currentFocusItem, &QObject::destroyed, this, &OffscreenQmlSurface::focusDestroyed);
 }
 
 void OffscreenQmlSurface::setFocusText(bool newFocusText) {
@@ -625,7 +599,6 @@ void OffscreenQmlSurface::synthesizeKeyPress(QString key, QObject* targetOverrid
             equals(utf8Key, (uint8_t*)PUNCTUATION_STRING) || equals(utf8Key, (uint8_t*)ALPHABET_STRING)) {
             return;  // ignore
         } else if (equals(utf8Key, COLLAPSE_KEYBOARD)) {
-            lowerKeyboard();
             return;
         } else if (equals(utf8Key, BACKSPACE_SYMBOL)) {
             scanCode = Qt::Key_Backspace;
@@ -646,236 +619,6 @@ void OffscreenQmlSurface::synthesizeKeyPress(QString key, QObject* targetOverrid
         QCoreApplication::postEvent(eventHandler, pressEvent);
         QCoreApplication::postEvent(eventHandler, releaseEvent);
     }
-}
-
-void OffscreenQmlSurface::lowerKeyboard() {
-    QSignalBlocker blocker(getWindow());
-
-    if (_currentFocusItem) {
-        _currentFocusItem->setFocus(false);
-        setKeyboardRaised(_currentFocusItem, false);
-    }
-}
-
-static int distanceToParent(QQuickItem* from, QQuickItem* to) {
-    int i = 0;
-    while (true) {
-        if (from == nullptr) {
-            return -1;
-        } else if (from == to) {
-            return i;
-        }
-
-        ++i;
-        from = qobject_cast<QQuickItem*> (from->parent());
-    }
-    return i;
-}
-
-static void findChildren(QQuickItem* item, QQuickItem* exclude, const QString& objectName, std::function<void(QQuickItem*)> onChildFound) {
-    for (auto child : item->children()) {
-        if (child != exclude) {
-            auto quickItem = qobject_cast<QQuickItem*>(child);
-            if (quickItem) {
-                if (quickItem->objectName() == objectName) {
-                    onChildFound(quickItem);
-                }
-                findChildren(quickItem, exclude, objectName, onChildFound);
-            }
-        }
-    }
-}
-
-static QList<QQuickItem*> findKeyboards(QQuickItem* root, QQuickItem* exclude) {
-    if (exclude == nullptr) {
-        return root->findChildren<QQuickItem*>(QString("keyboard"));
-    }
-
-    QList<QQuickItem*> keyboards;
-    findChildren(root, exclude, QString("keyboard"), [&](QQuickItem* keyboard) {
-        keyboards.append(keyboard);
-    });
-
-    return keyboards;
-}
-
-static void outputParents(QQuickItem* item) {
-    auto i = item;
-    int a = 1;
-    while (i) {
-        qDebug() << QString(a * 2, ' ') << i << "<=";
-        i = qobject_cast<QQuickItem*> (i->parent());
-        ++a;
-    }
-}
-
-QQuickItem* OffscreenQmlSurface::findNearestKeyboard(QQuickItem *focusItem, QQuickItem** keyboardContainer /*= nullptr*/) {
-
-    QQuickItem* item = focusItem;
-    QQuickItem* visited = nullptr;
-
-    while (item) {
-        if (item->property("keyboardRaised").isValid()) {
-
-            if (keyboardContainer)
-                *keyboardContainer = item;
-
-            if (item->property("keyboardContainer").isValid()) {
-                return qvariant_cast<QQuickItem*> (item->property("keyboardContainer"));
-            }
-
-            auto keyboards = findKeyboards(item, visited);
-
-            if (!keyboards.empty()) {
-                QQuickItem* nearestKeyboard = nullptr;
-                int minDistance = INT_MAX;
-
-                for (auto keyboard : keyboards) {
-                    auto distance = distanceToParent(keyboard, item);
-                    qDebug() << "keyboard: " << keyboard << "with distance to item: " << distance;
-                    outputParents(keyboard);
-
-                    if (minDistance > distance) {
-                        minDistance = distance;
-                        nearestKeyboard = keyboard;
-                    }
-                }
-                return nearestKeyboard;
-            }
-
-            visited = item;
-        }
-        item = dynamic_cast<QQuickItem*>(item->parentItem());
-    }
-
-    return nullptr;
-}
-
-void OffscreenQmlSurface::setKeyboardRaised(QObject* object, bool raised) {
-    qCDebug(uiLogging) << "setKeyboardRaised: " << object << ", raised: " << raised;
-
-    if (!object) {
-        return;
-    }
-
-    /*
-    if (raised && !qApp->property(hifi::properties::HMD).toBool()) {
-        return;
-    }
-    */
-
-#if !defined(Q_OS_ANDROID)
-
-    auto focusObject = object;
-    auto root = getRootItem();
-    qDebug() << "root: " << root << "objectName: " << root->objectName();
-
-    auto thekeyboard = root->findChild<QQuickItem*>(QString("virtualkeyboard"));
-    assert(thekeyboard);
-
-    if (!thekeyboard) {
-        qWarning() << "no 'virtualkeyboard' found!" << root << root->parent();
-        return;
-    }
-
-    auto quickItem = qobject_cast<QQuickItem*>(focusObject);
-    if (quickItem && raised)
-    {
-        QQuickItem* keyboardContainer = nullptr;
-        auto keyboard = findNearestKeyboard(qobject_cast<QQuickItem*> (focusObject), &keyboardContainer);
-        qDebug() << "focusObject: " << focusObject;
-
-        if (keyboard) {
-            qDebug() << "keyboard found: " << keyboard << "parent: " << keyboard->parent();
-
-            auto item = quickItem;
-            bool numeric = false;
-
-            while (item != keyboardContainer) {
-                numeric = numeric || QString(item->metaObject()->className()).left(7) == "SpinBox";
-                item = item->parentItem();
-            }
-
-            if (keyboardContainer->property("punctuationMode").isValid()) {
-                keyboardContainer->setProperty("punctuationMode", numeric);
-            }
-
-            if (keyboardContainer->property("keyboardRaised").isValid()) {
-                keyboardContainer->setProperty("keyboardRaised", QVariant(true));
-            }
-
-            qDebug() << "attaching keyboard to placeholder...";
-            thekeyboard->setProperty("mirroredText", QVariant(QString()));
-            thekeyboard->setParentItem(keyboard);
-            return;
-        }
-    }
-
-    thekeyboard->setParentItem(nullptr);
-
-#endif
-}
-
-void OffscreenQmlSurface::setKeyboardRaised(QObject* object, bool raised, bool numeric, bool passwordField) {
-    qCDebug(uiLogging) << "setKeyboardRaised: " << object << ", raised: " << raised << ", numeric: " << numeric
-                       << ", password: " << passwordField;
-
-    if (!object) {
-        return;
-    }
-
-    /*
-    if (raised && !qApp->property(hifi::properties::HMD).toBool()) {
-        return;
-    }
-    */
-
-#if !defined(Q_OS_ANDROID)
-
-    auto focusObject = object;
-    auto root = getRootItem();
-    qDebug() << "root: " << root << "objectName: " << root->objectName();
-
-    auto thekeyboard = root->findChild<QQuickItem*>(QString("virtualkeyboard"));
-    assert(thekeyboard);
-
-    if (!thekeyboard) {
-        qWarning() << "no 'virtualkeyboard' found!" << root << root->parent();
-        return;
-    }
-
-    auto quickItem = qobject_cast<QQuickItem*>(focusObject);
-    if (quickItem && raised)
-    {
-        QQuickItem* keyboardContainer = nullptr;
-        auto keyboard = findNearestKeyboard(qobject_cast<QQuickItem*> (focusObject), &keyboardContainer);
-        qDebug() << "focusObject: " << focusObject;
-
-        if (keyboard) {
-            qDebug() << "keyboard found: " << keyboard << "parent: " << keyboard->parent();
-
-            if (keyboardContainer->property("punctuationMode").isValid()) {
-                keyboardContainer->setProperty("punctuationMode", numeric);
-            }
-
-            if (keyboardContainer->property("passwordField").isValid()) {
-                keyboardContainer->setProperty("passwordField", QVariant(passwordField));
-            }
-
-            if (keyboardContainer->property("keyboardRaised").isValid()) {
-                keyboardContainer->setProperty("keyboardRaised", QVariant(true));
-            }
-
-            qDebug() << "attaching keyboard to placeholder...";
-            thekeyboard->setProperty("mirroredText", QVariant(QString()));
-            thekeyboard->setParentItem(keyboard);
-            return;
-        }
-    }
-
-    thekeyboard->setParentItem(nullptr);
-
-#endif
 }
 
 void OffscreenQmlSurface::emitScriptEvent(const QVariant& message) {
@@ -900,9 +643,9 @@ void OffscreenQmlSurface::emitWebEvent(const QVariant& message) {
         if (messageString.left(RAISE_KEYBOARD.length()) == RAISE_KEYBOARD) {
             bool numeric = (messageString == RAISE_KEYBOARD_NUMERIC || messageString == RAISE_KEYBOARD_NUMERIC_PASSWORD);
             bool passwordField = (messageString == RAISE_KEYBOARD_PASSWORD || messageString == RAISE_KEYBOARD_NUMERIC_PASSWORD);
-            setKeyboardRaised(_currentFocusItem, true, numeric, passwordField);
+//            setKeyboardRaised(_currentFocusItem, true, numeric, passwordField);
         } else if (messageString == LOWER_KEYBOARD) {
-            setKeyboardRaised(_currentFocusItem, false);
+//            setKeyboardRaised(_currentFocusItem, false);
         } else {
             emit webEventReceived(message);
         }

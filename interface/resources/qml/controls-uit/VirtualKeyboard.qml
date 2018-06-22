@@ -16,6 +16,7 @@ Rectangle {
     id: keyboardBase
     objectName: "virtualkeyboard"
 
+    signal collapsePressed();
     property var lastKeybordPlaceholder: null
     onParentChanged: {
         console.debug('VirtualKeyboard: parent: ', parent, 'lastKeybordPlaceholder: ', lastKeybordPlaceholder);
@@ -334,6 +335,10 @@ Rectangle {
                     letterAnchors.topMargin: -4;
                     verticalAlignment: Text.AlignVCenter;
                     width: 86; glyph: "\ue02b";
+
+                    onKeyPressed: {
+                        collapsePressed();
+                    }
                 }
             }
         }
@@ -427,6 +432,10 @@ Rectangle {
                     letterAnchors.topMargin: -4;
                     verticalAlignment: Text.AlignVCenter;
                     width: 86; glyph: "\ue02b";
+
+                    onKeyPressed: {
+                        collapsePressed();
+                    }
                 }
             }
         }

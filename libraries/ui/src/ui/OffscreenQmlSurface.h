@@ -31,12 +31,8 @@ public:
     bool getCleaned() { return _isCleaned; }
 
     bool eventFilter(QObject* originalDestination, QEvent* event) override;
-    static QQuickItem* findNearestKeyboard(QQuickItem *focusItem, QQuickItem** keyboardContainer = nullptr);
 
-    void setKeyboardRaised(QObject* object, bool raised);
-    void setKeyboardRaised(QObject* object, bool raised, bool numeric, bool passwordField);
     Q_INVOKABLE void synthesizeKeyPress(QString key, QObject* targetOverride = nullptr);
-    Q_INVOKABLE void lowerKeyboard();
     PointerEvent::EventType choosePointerEventType(QEvent::Type type);
     unsigned int deviceIdByTouchPoint(qreal x, qreal y);
 
@@ -53,7 +49,6 @@ signals:
     void fromQml(const QVariant& message);
 
 public slots:
-    void focusDestroyed(QObject *obj);
     // script event bridge
     void emitScriptEvent(const QVariant& scriptMessage);
     // web event bridge
@@ -62,7 +57,6 @@ public slots:
     void sendToQml(const QVariant& message);
 
 protected:
-    void clearFocusItem();
     void setFocusText(bool newFocusText);
     void initializeEngine(QQmlEngine* engine) override;
     void onRootContextCreated(QQmlContext* qmlContext) override;
@@ -87,7 +81,6 @@ public slots:
 private:
     bool _focusText { false };
     bool _isCleaned{ false };
-    QQuickItem* _currentFocusItem { nullptr };
 
     struct TouchState {
         QTouchEvent::TouchPoint touchPoint;
