@@ -16,6 +16,8 @@ Item {
     property alias verticalAlignment: letter.verticalAlignment
     property alias letterAnchors: letter.anchors
 
+    signal keyPressed();
+
     function resetToggledMode(mode) {
         toggled = mode;
         if (toggled) {
@@ -99,6 +101,7 @@ Item {
                 }
             }
             mouse.accepted = true;
+            keyPressed();
         }
     }
 
