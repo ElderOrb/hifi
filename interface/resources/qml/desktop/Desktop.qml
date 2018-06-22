@@ -30,14 +30,15 @@ FocusScope {
 
     Component.onCompleted: {
         console.debug('Desktop created: ', desktop)
+        offscreenWindow.focusObjectChanged.connect(vk.onFocusObjectChanged);
     }
 
-    VirtualKeyboard {
+    OnscreenKeyboard {
         id: vk
-        parent: null
+        parent: null;
 
         Component.onCompleted: {
-            console.debug('Desktop: VirtualKeyboard created for ', desktop)
+             console.debug('Desktop: OnscreenKeyboard created for ', desktop)
         }
     }
 
