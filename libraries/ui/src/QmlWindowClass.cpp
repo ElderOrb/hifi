@@ -181,6 +181,7 @@ void QmlWindowClass::emitWebEvent(const QVariant& webMessage) {
 }
 
 void QmlWindowClass::setKeyboardRaised(QObject* object, bool raised, bool numeric) {
+    /*
     if (!object) {
         return;
     }
@@ -226,6 +227,7 @@ void QmlWindowClass::setKeyboardRaised(QObject* object, bool raised, bool numeri
 
     qDebug() << "hiding keyboard.. ";
     thekeyboard->setParentItem(nullptr);
+    */
 }
 
 QmlWindowClass::~QmlWindowClass() {
