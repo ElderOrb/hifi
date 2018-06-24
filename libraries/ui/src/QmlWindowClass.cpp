@@ -167,67 +167,18 @@ void QmlWindowClass::emitWebEvent(const QVariant& webMessage) {
     } else {
         // Special case to handle raising and lowering the virtual keyboard.
         const QString RAISE_KEYBOARD = "_RAISE_KEYBOARD";
-        const QString RAISE_KEYBOARD_NUMERIC = "_RAISE_KEYBOARD_NUMERIC";
         const QString LOWER_KEYBOARD = "_LOWER_KEYBOARD";
         QString messageString = webMessage.type() == QVariant::String ? webMessage.toString() : "";
         if (messageString.left(RAISE_KEYBOARD.length()) == RAISE_KEYBOARD) {
-            setKeyboardRaised(asQuickItem(), true, messageString == RAISE_KEYBOARD_NUMERIC);
+            auto offscreenUi = DependencyManager::get<OffscreenUi>();
+            emit offscreenUi->webKeyboardEventReceived(webMessage);
         } else if (messageString == LOWER_KEYBOARD) {
-            setKeyboardRaised(asQuickItem(), false);
+            auto offscreenUi = DependencyManager::get<OffscreenUi>();
+            emit offscreenUi->webKeyboardEventReceived(webMessage);
         } else {
             emit webEventReceived(webMessage);
         }
     }
-}
-
-void QmlWindowClass::setKeyboardRaised(QObject* object, bool raised, bool numeric) {
-    /*
-    if (!object) {
-        return;
-    }
-
-    auto focusObject = object;
-    auto offscreenUi = DependencyManager::get<OffscreenUi>();
-    auto root = offscreenUi->getRootItem();
-    qDebug() << "root: " << root << "objectName: " << root->objectName();
-
-    auto thekeyboard = root->findChild<QQuickItem*>(QString("virtualkeyboard"));
-    assert(thekeyboard);
-
-    if (!thekeyboard) {
-        qWarning("no 'virtualkeyboard' found!");
-        return;
-    }
-
-    auto quickItem = qobject_cast<QQuickItem*>(focusObject);
-    if (quickItem && quickItem->hasActiveFocus() && raised)
-    {
-        QQuickItem* keyboardContainer = nullptr;
-        auto keyboard = OffscreenQmlSurface::findNearestKeyboard(qobject_cast<QQuickItem*> (focusObject), &keyboardContainer);
-        qDebug() << "focusObject: " << focusObject << "keyboard: " << keyboard << "keyboard.parent: " << keyboard->parent();
-
-        if (keyboard) {
-            if (keyboardContainer->property("punctuationMode").isValid()) {
-                keyboardContainer->setProperty("punctuationMode", numeric);
-            }
-
-            if (keyboardContainer->property("keyboardRaised").isValid()) {
-                keyboardContainer->setProperty("keyboardRaised", QVariant(true));
-            }
-
-            qDebug() << "attaching keyboard to placeholder...";
-            thekeyboard->setProperty("mirroredText", QVariant(QString()));
-            thekeyboard->setParentItem(keyboard);
-            return;
-        }
-        else {
-            qDebug() << "keyboard not found.. ";
-        }
-    }
-
-    qDebug() << "hiding keyboard.. ";
-    thekeyboard->setParentItem(nullptr);
-    */
 }
 
 QmlWindowClass::~QmlWindowClass() {

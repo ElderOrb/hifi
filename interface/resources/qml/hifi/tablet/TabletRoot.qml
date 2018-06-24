@@ -22,7 +22,12 @@ Item {
 
     Component.onCompleted: {
         console.debug('TabletRoot created: ', tabletRoot)
+
+        console.debug('connecting offscreenWindow', offscreenWindow, 'focusObjectChanged', offscreenWindow.focusObjectChanged, 'to ', vk.onFocusObjectChanged)
         offscreenWindow.focusObjectChanged.connect(vk.onFocusObjectChanged);
+
+        console.debug('connecting eventBridge', eventBridge, 'webEventReceived', eventBridge.webKeyboardEventReceived, 'to ', vk.onWebEventReceived)
+        eventBridge.webKeyboardEventReceived.connect(vk.onWebEventReceived);
     }
 
     OnscreenKeyboard {

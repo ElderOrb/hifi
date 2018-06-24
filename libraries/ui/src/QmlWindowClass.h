@@ -252,8 +252,6 @@ protected:
     QString _source;
 
 private:
-    // QmlWindow content may include WebView requiring EventBridge.
-    void setKeyboardRaised(QObject* object, bool raised, bool numeric = false);
 };
 
 #endif
