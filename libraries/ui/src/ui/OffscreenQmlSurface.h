@@ -41,6 +41,8 @@ signals:
     void focusTextChanged(bool focusText);
     void audioOutputDeviceChanged(const QString& deviceName);
 
+    // web keyboard event bridge
+    void webKeyboardEventReceived(const QVariant& message);
     // web event bridge
     void webEventReceived(const QVariant& message);
     // script event bridge

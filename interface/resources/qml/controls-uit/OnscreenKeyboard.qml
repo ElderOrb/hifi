@@ -4,8 +4,26 @@ VirtualKeyboard {
     id: vk
     property var currentFocusItem: null;
 
+    function onWebEventReceived(webEvent) {
+        console.debug('VirtualKeyboard.onWebEventReceived: ', webEvent)
+        var RAISE_KEYBOARD = "_RAISE_KEYBOARD";
+        var RAISE_KEYBOARD_NUMERIC = "_RAISE_KEYBOARD_NUMERIC";
+        var LOWER_KEYBOARD = "_LOWER_KEYBOARD";
+        var RAISE_KEYBOARD_NUMERIC_PASSWORD = "_RAISE_KEYBOARD_NUMERIC_PASSWORD";
+        var RAISE_KEYBOARD_PASSWORD = "_RAISE_KEYBOARD_PASSWORD";
+
+        var messageString = webEvent;
+        if(messageString.indexOf(RAISE_KEYBOARD) === 0) {
+            var numeric = (messageString === RAISE_KEYBOARD_NUMERIC || messageString === RAISE_KEYBOARD_NUMERIC_PASSWORD);
+            var passwordField = (messageString === RAISE_KEYBOARD_PASSWORD || messageString === RAISE_KEYBOARD_NUMERIC_PASSWORD);
+            setKeyboardRaised1(currentFocusItem, true, numeric, passwordField);
+        } else {
+            setKeyboardRaised1(currentFocusItem, false, false, false);
+        }
+    }
+
     function onFocusObjectChanged(focusObject) {
-        console.debug('onFocusObjectChanged: focusObject = ', focusObject)
+        console.debug('VirtualKeyboard.onFocusObjectChanged: focusObject = ', focusObject)
 
         var item = focusObject;
 
@@ -35,6 +53,36 @@ VirtualKeyboard {
             from = from.parent;
         }
         return i;
+    }
+
+    function setKeyboardRaised1(item, raised, numeric, password) {
+        var keyboard = findNearestKeyboard(item);
+        console.debug('activeFocusItemChanged: keyboard = ', keyboard,
+                      'keyboard.keyboardContainer: ', keyboard.keyboardContainer,
+                      'keyboard.keyboard: ', keyboard.keyboard,
+                      'raised: ', raised,
+                      'numeric: ', numeric,
+                      'password: ', password
+                      );
+
+        if(keyboard) {
+            console.debug('keyboard.keyboardContainer.keyboardRaised = ', raised)
+            keyboard.keyboardContainer.keyboardRaised = raised;
+            vk.mirroredText = '';
+
+            if (keyboard.keyboardContainer.hasOwnProperty("punctuationMode")) {
+                keyboard.keyboardContainer["punctuationMode"] = numeric;
+            }
+
+            if (keyboard.keyboardContainer.hasOwnProperty("passwordField")) {
+                keyboard.keyboardContainer["passwordField"] = password;
+            }
+
+            console.debug('vk.parent = ', keyboard.keyboard)
+            vk.parent = keyboard.keyboard;
+        } else {
+            vk.parent = null;
+        }
     }
 
     function setKeyboardRaised(item, raised) {
