@@ -30,7 +30,12 @@ FocusScope {
 
     Component.onCompleted: {
         console.debug('Desktop created: ', desktop)
+
+        console.debug('connecting offscreenWindow', offscreenWindow, 'focusObjectChanged', offscreenWindow.focusObjectChanged, 'to ', vk.onFocusObjectChanged)
         offscreenWindow.focusObjectChanged.connect(vk.onFocusObjectChanged);
+
+        console.debug('connecting eventBridge', eventBridge, 'webKeyboardEventReceived', eventBridge.webKeyboardEventReceived, 'to ', vk.onWebEventReceived)
+        eventBridge.webKeyboardEventReceived.connect(vk.onWebEventReceived);
     }
 
     OnscreenKeyboard {

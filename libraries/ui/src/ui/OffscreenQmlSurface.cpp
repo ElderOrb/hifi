@@ -635,17 +635,12 @@ void OffscreenQmlSurface::emitWebEvent(const QVariant& message) {
     } else {
         // Special case to handle raising and lowering the virtual keyboard.
         const QString RAISE_KEYBOARD = "_RAISE_KEYBOARD";
-        const QString RAISE_KEYBOARD_NUMERIC = "_RAISE_KEYBOARD_NUMERIC";
         const QString LOWER_KEYBOARD = "_LOWER_KEYBOARD";
-        const QString RAISE_KEYBOARD_NUMERIC_PASSWORD = "_RAISE_KEYBOARD_NUMERIC_PASSWORD";
-        const QString RAISE_KEYBOARD_PASSWORD = "_RAISE_KEYBOARD_PASSWORD";
         QString messageString = message.type() == QVariant::String ? message.toString() : "";
         if (messageString.left(RAISE_KEYBOARD.length()) == RAISE_KEYBOARD) {
-            bool numeric = (messageString == RAISE_KEYBOARD_NUMERIC || messageString == RAISE_KEYBOARD_NUMERIC_PASSWORD);
-            bool passwordField = (messageString == RAISE_KEYBOARD_PASSWORD || messageString == RAISE_KEYBOARD_NUMERIC_PASSWORD);
-//            setKeyboardRaised(_currentFocusItem, true, numeric, passwordField);
+            emit webKeyboardEventReceived(message);
         } else if (messageString == LOWER_KEYBOARD) {
-//            setKeyboardRaised(_currentFocusItem, false);
+            emit webKeyboardEventReceived(message);
         } else {
             emit webEventReceived(message);
         }
