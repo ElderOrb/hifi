@@ -4,6 +4,7 @@ VirtualKeyboard {
     id: vk
     property var currentFocusItem: null;
 
+    // keyboard handling for HTML/WebEngine controls
     function onWebEventReceived(webEvent) {
         console.debug('VirtualKeyboard.onWebEventReceived: ', webEvent)
         var RAISE_KEYBOARD = "_RAISE_KEYBOARD";
@@ -16,12 +17,13 @@ VirtualKeyboard {
         if(messageString.indexOf(RAISE_KEYBOARD) === 0) {
             var numeric = (messageString === RAISE_KEYBOARD_NUMERIC || messageString === RAISE_KEYBOARD_NUMERIC_PASSWORD);
             var passwordField = (messageString === RAISE_KEYBOARD_PASSWORD || messageString === RAISE_KEYBOARD_NUMERIC_PASSWORD);
-            setKeyboardRaised1(currentFocusItem, true, numeric, passwordField);
+            setKeyboardRaised(currentFocusItem, true, numeric, passwordField);
         } else {
-            setKeyboardRaised1(currentFocusItem, false, false, false);
+            setKeyboardRaised(currentFocusItem, false, false, false);
         }
     }
 
+    // keyboard handling for QML controls
     function onFocusObjectChanged(focusObject) {
         console.debug('VirtualKeyboard.onFocusObjectChanged: focusObject = ', focusObject)
 
@@ -55,7 +57,7 @@ VirtualKeyboard {
         return i;
     }
 
-    function setKeyboardRaised1(item, raised, numeric, password) {
+    function setKeyboardRaised(item, raised, numeric, password) {
         var keyboard = findNearestKeyboard(item);
         console.debug('activeFocusItemChanged: keyboard = ', keyboard,
                       'keyboard.keyboardContainer: ', keyboard.keyboardContainer,
@@ -70,38 +72,18 @@ VirtualKeyboard {
             keyboard.keyboardContainer.keyboardRaised = raised;
             vk.mirroredText = '';
 
-            if (keyboard.keyboardContainer.hasOwnProperty("punctuationMode")) {
-                keyboard.keyboardContainer["punctuationMode"] = numeric;
+            if(numeric === undefined) {
+                numeric = false;
+                while (item !== keyboard.keyboardContainer) {
+                    numeric = numeric || item.toString().indexOf("SpinBox") === 0;
+                    item = item.parent;
+                }
             }
 
-            if (keyboard.keyboardContainer.hasOwnProperty("passwordField")) {
-                keyboard.keyboardContainer["passwordField"] = password;
-            }
-
-            console.debug('vk.parent = ', keyboard.keyboard)
-            vk.parent = keyboard.keyboard;
-        } else {
-            vk.parent = null;
-        }
-    }
-
-    function setKeyboardRaised(item, raised) {
-        var keyboard = findNearestKeyboard(item);
-        console.debug('activeFocusItemChanged: keyboard = ', keyboard,
-                      'keyboard.keyboardContainer: ', keyboard.keyboardContainer,
-                      'keyboard.keyboard: ', keyboard.keyboard,
-                      'raised: ', raised
-                      );
-
-        if(keyboard) {
-            console.debug('keyboard.keyboardContainer.keyboardRaised = ', raised)
-            keyboard.keyboardContainer.keyboardRaised = raised;
-            vk.mirroredText = '';
-
-            var numeric = false;
-            while (item !== keyboard.keyboardContainer) {
-                numeric = numeric || item.toString().indexOf("SpinBox") === 0;
-                item = item.parent;
+            if(password !== undefined) {
+                if (keyboard.keyboardContainer.hasOwnProperty("passwordField")) {
+                    keyboard.keyboardContainer["passwordField"] = password;
+                }
             }
 
             if (keyboard.keyboardContainer.hasOwnProperty("punctuationMode")) {
