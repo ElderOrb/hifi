@@ -58,6 +58,8 @@ VirtualKeyboard {
     }
 
     function setKeyboardRaised(item, raised, numeric, password) {
+        console.debug('setKeyboardRaised: item = ', item, ', raised = ', raised, ', numeric = ', numeric, ', password = ', password);
+
         var keyboard = findNearestKeyboard(item);
         console.debug('activeFocusItemChanged: keyboard = ', keyboard,
                       'keyboard.keyboardContainer: ', keyboard.keyboardContainer,
