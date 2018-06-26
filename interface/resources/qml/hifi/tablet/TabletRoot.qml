@@ -30,12 +30,12 @@ Item {
         eventBridge.webKeyboardEventReceived.connect(vk.onWebEventReceived);
     }
 
-    OnscreenKeyboard {
+    HifiVirtualKeyboard {
         id: vk
         parent: null;
 
         Component.onCompleted: {
-             console.debug('TabletRoot: OnscreenKeyboard created for ', tabletRoot)
+             console.debug('TabletRoot: HifiVirtualKeyboard created for ', tabletRoot)
         }
     }
 
