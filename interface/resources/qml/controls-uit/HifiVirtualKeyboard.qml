@@ -6,7 +6,7 @@ VirtualKeyboard {
 
     // keyboard handling for HTML/WebEngine controls
     function onWebEventReceived(webEvent) {
-        console.debug('VirtualKeyboard.onWebEventReceived: ', webEvent)
+        console.debug('HifiVirtualKeyboard.onWebEventReceived: ', webEvent)
         var RAISE_KEYBOARD = "_RAISE_KEYBOARD";
         var RAISE_KEYBOARD_NUMERIC = "_RAISE_KEYBOARD_NUMERIC";
         var LOWER_KEYBOARD = "_LOWER_KEYBOARD";
@@ -25,7 +25,7 @@ VirtualKeyboard {
 
     // keyboard handling for QML controls
     function onFocusObjectChanged(focusObject) {
-        console.debug('VirtualKeyboard.onFocusObjectChanged: focusObject = ', focusObject)
+        console.debug('HifiVirtualKeyboard.onFocusObjectChanged: focusObject = ', focusObject)
 
         var item = focusObject;
 
@@ -60,40 +60,40 @@ VirtualKeyboard {
     function setKeyboardRaised(item, raised, numeric, password) {
         console.debug('setKeyboardRaised: item = ', item, ', raised = ', raised, ', numeric = ', numeric, ', password = ', password);
 
-        var keyboard = findNearestKeyboard(item);
-        console.debug('activeFocusItemChanged: keyboard = ', keyboard,
-                      'keyboard.keyboardContainer: ', keyboard.keyboardContainer,
-                      'keyboard.keyboard: ', keyboard.keyboard,
+        var keyboardKinfo = findNearestKeyboard(item);
+        console.debug('activeFocusItemChanged: keyboardKinfo = ', keyboardKinfo,
+                      'keyboardKinfo.keyboardContainer: ', keyboardKinfo.keyboardContainer,
+                      'keyboardKinfo.keyboard: ', keyboardKinfo.keyboard,
                       'raised: ', raised,
                       'numeric: ', numeric,
                       'password: ', password
                       );
 
-        if(keyboard) {
-            console.debug('keyboard.keyboardContainer.keyboardRaised = ', raised)
-            keyboard.keyboardContainer.keyboardRaised = raised;
+        if(keyboardKinfo) {
+            console.debug('keyboardKinfo.keyboardContainer.keyboardRaised = ', raised)
+            keyboardKinfo.keyboardContainer.keyboardRaised = raised;
             vk.mirroredText = '';
 
             if(numeric === undefined) {
                 numeric = false;
-                while (item !== keyboard.keyboardContainer) {
+                while (item !== keyboardKinfo.keyboardContainer) {
                     numeric = numeric || item.toString().indexOf("SpinBox") === 0;
                     item = item.parent;
                 }
             }
 
             if(password !== undefined) {
-                if (keyboard.keyboardContainer.hasOwnProperty("passwordField")) {
-                    keyboard.keyboardContainer["passwordField"] = password;
+                if (keyboardKinfo.keyboardContainer.hasOwnProperty("passwordField")) {
+                    keyboardKinfo.keyboardContainer["passwordField"] = password;
                 }
             }
 
-            if (keyboard.keyboardContainer.hasOwnProperty("punctuationMode")) {
-                keyboard.keyboardContainer["punctuationMode"] = numeric;
+            if (keyboardKinfo.keyboardContainer.hasOwnProperty("punctuationMode")) {
+                keyboardKinfo.keyboardContainer["punctuationMode"] = numeric;
             }
 
-            console.debug('vk.parent = ', keyboard.keyboard)
-            vk.parent = keyboard.keyboard;
+            console.debug('vk.parent = ', keyboardKinfo.keyboard)
+            vk.parent = keyboardKinfo.keyboard;
         } else {
             vk.parent = null;
         }

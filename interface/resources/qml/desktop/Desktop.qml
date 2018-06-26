@@ -38,12 +38,12 @@ FocusScope {
         eventBridge.webKeyboardEventReceived.connect(vk.onWebEventReceived);
     }
 
-    OnscreenKeyboard {
+    HifiVirtualKeyboard {
         id: vk
         parent: null;
 
         Component.onCompleted: {
-             console.debug('Desktop: OnscreenKeyboard created for ', desktop)
+             console.debug('Desktop: HifiVirtualKeyboard created for ', desktop)
         }
     }
 
