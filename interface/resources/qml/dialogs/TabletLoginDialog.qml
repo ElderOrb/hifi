@@ -37,7 +37,6 @@ TabletModalWindow {
         property bool keyboardRaised: false
         property bool punctuationMode: false
         property bool isPassword: false
-        property alias text: loginKeyboard.mirroredText
 
         readonly property bool isTablet: true
 

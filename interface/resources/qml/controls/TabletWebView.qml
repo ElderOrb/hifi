@@ -173,10 +173,6 @@ Item {
         numeric: parent.punctuationMode
         password: parent.passwordField
 
-        onPasswordChanged: {
-            keyboard.mirroredText = "";
-        }
-
         anchors {
             left: parent.left
             right: parent.right
