@@ -26,12 +26,14 @@ Rectangle {
             numeric = Qt.binding(function() { return parent.numeric });
             password = Qt.binding(function() { return parent.password });
             raised = Qt.binding(function() { return parent.raised });
+            mirroredText = Qt.binding(function() { return parent.mirroredText });
         } else {
             anchors.left = undefined;
             anchors.right = undefined;
             numeric = false;
             password = false;
             raised = false;
+            mirroredText = '';
         }
     }
 
@@ -70,6 +72,13 @@ Rectangle {
         value: raisedHeight
     }
 
+    Binding {
+        target: parent
+        when: parent
+        property: "mirroredText"
+        value: mirroredText
+    }
+
     color: "#252525"
 
     property bool enabled: true
@@ -104,10 +113,6 @@ Rectangle {
 
     property bool shiftMode: false
     property bool numericShiftMode: false
-
-    onRaisedChanged: {
-        mirroredText = "";
-    }
 
     function resetShiftMode(mode) {
         shiftMode = mode;

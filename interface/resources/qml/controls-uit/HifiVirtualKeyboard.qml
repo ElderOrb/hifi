@@ -82,7 +82,6 @@ VirtualKeyboard {
         if(keyboardKinfo) {
             console.debug('keyboardKinfo.keyboardContainer.keyboardRaised = ', raised)
             keyboardKinfo.keyboardContainer.keyboardRaised = raised;
-            vk.mirroredText = '';
 
             if(numeric === undefined) {
                 numeric = false;
@@ -104,6 +103,7 @@ VirtualKeyboard {
 
             console.debug('vk.parent = ', keyboardKinfo.keyboard)
             vk.parent = keyboardKinfo.keyboard;
+            mirroredText = '';
         } else {
             vk.parent = null;
         }

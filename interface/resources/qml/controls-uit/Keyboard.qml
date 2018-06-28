@@ -33,6 +33,11 @@ Rectangle {
         console.debug('keyboard: ', keyboard, 'onRaisedHeightChanged: ', raisedHeight);    
     }
 
+    property string mirroredText: '';
+    onMirroredTextChanged: {
+        console.debug('keyboard:', keyboard, 'onMirroredTextChanged: ', mirroredText);
+    }
+
     function resetShiftMode(mode) {
         console.debug('keyboard: ', keyboard, 'resetShiftMode stub called: ', mode);
     }
