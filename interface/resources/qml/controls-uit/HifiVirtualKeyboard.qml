@@ -86,7 +86,16 @@ VirtualKeyboard {
             if(numeric === undefined) {
                 numeric = false;
                 while (item !== keyboardKinfo.keyboardContainer) {
-                    numeric = numeric || item.toString().indexOf("SpinBox") === 0;
+                    if(item.toString().indexOf("SpinBox") === 0) {
+                        numeric = true;
+                        break;
+                    }
+
+                    if(item.hasOwnProperty('inputMethodHints') && item.inputMethodHints === Qt.ImhDigitsOnly) {
+                        numeric = true;
+                        break;
+                    }
+
                     item = item.parent;
                 }
             }
