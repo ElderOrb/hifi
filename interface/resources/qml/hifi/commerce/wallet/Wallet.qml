@@ -30,6 +30,7 @@ Rectangle {
     property var keyboardContainer: keyboard; // I failed to invent how to find this 'keyboard' from C++ because of ambiguity with other keyboards, 
 											// so just specified it here to allow searching by 'keyboardContainer'
     property bool isPassword: false;
+    property bool punctuationMode: false;
 
     anchors.fill: (typeof parent === undefined) ? undefined : parent;
 
@@ -718,7 +719,7 @@ Rectangle {
         id: keyboardContainer;
         z: 999;
         visible: keyboard.raised;
-        property bool punctuationMode: false;
+
         anchors {
             bottom: parent.bottom;
             left: parent.left;
@@ -728,8 +729,9 @@ Rectangle {
         HifiControlsUit.Keyboard {
             id: keyboard;
             raised: HMD.mounted && root.keyboardRaised;
-            numeric: parent.punctuationMode;
+            numeric: root.punctuationMode;
             password: root.isPassword;
+
             anchors {
                 bottom: parent.bottom;
                 left: parent.left;
