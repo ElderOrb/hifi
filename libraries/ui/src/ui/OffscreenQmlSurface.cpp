@@ -167,6 +167,51 @@ private:
     QObject* _eventBridge;
 };
 
+class QmlEventFilter : public QObject
+{
+    Q_OBJECT
+public:
+    explicit QmlEventFilter(QObject *parent = nullptr) : QObject(parent) {}
+
+    Q_PROPERTY(QObject* source READ source WRITE setSource NOTIFY sourceChanged)
+        QObject* source() const
+    {
+        return m_source;
+    }
+
+signals:
+
+    void sourceChanged(QObject* source);
+    void mousePressed();
+
+public slots:
+
+    void setSource(QObject* source)
+    {
+        if (m_source == source)
+            return;
+
+        m_source = source;
+        if (m_source) {
+            m_source->installEventFilter(this);
+        }
+
+        emit sourceChanged(m_source);
+    }
+protected:
+    bool eventFilter(QObject *watched, QEvent *event) {
+        if (watched == m_source) {
+            if (event->type() == QEvent::MouseButtonPress) {
+                emit mousePressed();
+            }
+        }
+
+        return QObject::eventFilter(watched, event);
+    }
+private:
+    QObject * m_source;
+};
+
 }}}  // namespace hifi::qml::offscreen
 
 using namespace hifi::qml::offscreen;
@@ -235,6 +280,7 @@ void OffscreenQmlSurface::initializeEngine(QQmlEngine* engine) {
         qRegisterMetaType<TabletProxy*>();
         qRegisterMetaType<TabletButtonProxy*>();
         qmlRegisterType<SoundEffect>("Hifi", 1, 0, "SoundEffect");
+        qmlRegisterType<QmlEventFilter>("Hifi", 1, 0, "QmlEventFilter");
     });
 
     // Register the pixmap Security Image Provider

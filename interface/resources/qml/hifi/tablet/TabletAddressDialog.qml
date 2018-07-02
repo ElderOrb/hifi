@@ -271,17 +271,17 @@ StackView {
                 }
                 color: hifiStyleConstants.colors.lightGray
                 opacity: 0.1
+
                 MouseArea {
                     anchors.fill: parent;
-                    onClicked: {
+                    propagateComposedEvents: true
+
+                    onPressed: {
                         addressLine.focus = true;
                         addressLine.forceActiveFocus();
-						/*
-                        if (HMD.active) {
-                            addressBarDialog.keyboardEnabled = HMD.active;
-                        }
-						*/
                         tabletRoot.playButtonClickSound();
+
+                        mouse.accepted = false; // to propagate click to text field and thus allow onscreen keyboard to raise
                     }
                 }
             }
