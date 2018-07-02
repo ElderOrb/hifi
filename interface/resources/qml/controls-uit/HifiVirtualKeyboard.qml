@@ -9,10 +9,28 @@
 //
 
 import QtQuick 2.7
+import Hifi 1.0
 
 VirtualKeyboard {
     id: vk
     property var currentFocusItem: null;
+    property var currentRaiseItem: null;
+
+    QmlEventFilter {
+        source: currentRaiseItem
+        onSourceChanged: {
+            console.debug("QmlEventFilter: ", source);
+        }
+
+        onMousePressed: {
+            console.debug('mouse pressed/controller touched: ', currentFocusItem);
+            setKeyboardRaised(currentFocusItem, true);
+        }
+
+        Component.onCompleted: {
+            console.debug('QmlEventFilter: onCompleted')
+        }
+    }
 
     // keyboard handling for HTML/WebEngine controls
     function onWebEventReceived(webEvent) {
@@ -42,7 +60,7 @@ VirtualKeyboard {
         // Raise and lower keyboard for QML text fields.
         // HTML text fields are handled in emitWebEvent() methods - testing READ_ONLY_PROPERTY prevents action for HTML files.
         var READ_ONLY_PROPERTY = "readOnly";
-        var raiseKeyboard = item.activeFocus && item[READ_ONLY_PROPERTY] === false;
+        var raiseKeyboard = item ? (item.activeFocus && item[READ_ONLY_PROPERTY] === false) : false;
         console.debug('raiseKeyboard: ', raiseKeyboard);
 
         if(currentFocusItem && !raiseKeyboard) {
@@ -50,6 +68,12 @@ VirtualKeyboard {
         }
         setKeyboardRaised(item, raiseKeyboard); // Always set focus so that alphabetic / numeric setting is updated.
         currentFocusItem = item;
+
+        if(raiseKeyboard) {
+            currentRaiseItem = item;
+        } else {
+            currentRaiseItem = null;
+        }
     }
 
     function distanceToParent(from, to) {
@@ -71,13 +95,17 @@ VirtualKeyboard {
         console.debug('setKeyboardRaised: item = ', item, ', raised = ', raised, ', numeric = ', numeric, ', password = ', password);
 
         var keyboardKinfo = findNearestKeyboard(item);
-        console.debug('activeFocusItemChanged: keyboardKinfo = ', keyboardKinfo,
-                      'keyboardKinfo.keyboardContainer: ', keyboardKinfo.keyboardContainer,
-                      'keyboardKinfo.keyboard: ', keyboardKinfo.keyboard,
-                      'raised: ', raised,
-                      'numeric: ', numeric,
-                      'password: ', password
-                      );
+        console.debug('keyboardKinfo: ', keyboardKinfo);
+
+        if(!!keyboardKinfo) {
+             console.debug('activeFocusItemChanged: keyboardKinfo = ', keyboardKinfo,
+                          'keyboardKinfo.keyboardContainer: ', keyboardKinfo.keyboardContainer,
+                          'keyboardKinfo.keyboard: ', keyboardKinfo.keyboard,
+                          'raised: ', raised,
+                          'numeric: ', numeric,
+                          'password: ', password
+                          );
+        }
 
         if(keyboardKinfo) {
             console.debug('keyboardKinfo.keyboardContainer.keyboardRaised = ', raised)
