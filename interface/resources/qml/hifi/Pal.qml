@@ -41,6 +41,7 @@ Rectangle {
     property bool iAmAdmin: false;
     property var activeTab: "nearbyTab";
     property bool currentlyEditingDisplayName: false
+    property bool keyboardRaised: currentlyEditingDisplayName
     property bool punctuationMode: false;
 
     HifiConstants { id: hifi; }
@@ -1043,7 +1044,7 @@ Rectangle {
 
         HifiControlsUit.Keyboard {
             id: keyboard;
-            raised: currentlyEditingDisplayName && HMD.mounted;
+            raised: keyboardRaised && HMD.mounted;
             numeric: parent.punctuationMode;
             anchors {
                 bottom: parent.bottom;
