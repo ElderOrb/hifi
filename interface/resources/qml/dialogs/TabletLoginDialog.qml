@@ -122,6 +122,11 @@ TabletModalWindow {
                 anchors.fill: parent
                 anchors.horizontalCenter: parent.horizontalCenter
                 source: loginDialog.isSteamRunning() ? "../LoginDialog/SignInBody.qml" : "../LoginDialog/LinkAccountBody.qml"
+                onStatusChanged: {
+                    if(status == Loader.Ready) {
+                        bodyLoader.item.keyboardContainer = loginKeyboard;
+                    }
+                }
             }
         }
     }

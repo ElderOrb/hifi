@@ -27,9 +27,17 @@ Item {
         loginDialog.signup(emailField.text, usernameField.text, passwordField.text)
     }
 
+    property bool isPassword: passwordField.focus
     property bool keyboardEnabled: false
     property bool keyboardRaised: false
     property bool punctuationMode: false
+    // used to find keyboard placeholder
+    property var keyboardContainer: null;
+    onKeyboardContainerChanged: {
+        console.debug("SignUpBody: onKeyboardContainerChanged: ", keyboardContainer)
+        emailField.focus = false;
+        emailField.forceActiveFocus();
+    }
 
     onKeyboardRaisedChanged: d.resize();
 
@@ -108,9 +116,6 @@ Item {
             width: parent.width
             label: "Email"
             activeFocusOnPress: true
-            onFocusChanged: {
-                root.text = "";
-            }
         }
 
         TextField {
@@ -132,9 +137,6 @@ Item {
                 horizontalAlignment: Text.AlignHCenter
 
                 color: hifi.colors.blueAccent
-                onFocusChanged: {
-                    root.text = "";
-                }
             }
         }
 
@@ -158,11 +160,6 @@ Item {
                 horizontalAlignment: Text.AlignHCenter
 
                 color: hifi.colors.blueAccent
-            }
-
-            onFocusChanged: {
-                root.text = "";
-                root.isPassword = focus
             }
 
             Keys.onReturnPressed: signupBody.signup()
@@ -226,6 +223,7 @@ Item {
         if (root.isTablet) {
             root.keyboardEnabled = HMD.active;
             root.keyboardRaised = Qt.binding( function() { return keyboardRaised; })
+            root.isPassword = Qt.binding(function() { return isPassword; })
         }
         d.resize();
 

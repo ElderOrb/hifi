@@ -29,9 +29,17 @@ Item {
         loginDialog.login(usernameField.text, passwordField.text)
     }
 
+    property bool isPassword: passwordField.focus
     property bool keyboardEnabled: false
     property bool keyboardRaised: false
     property bool punctuationMode: false
+    // used to find keyboard placeholder
+    property var keyboardContainer: null;
+    onKeyboardContainerChanged: {
+        console.debug("LinkAccountBody: onKeyboardContainerChanged: ", keyboardContainer)
+        usernameField.focus = false;
+        usernameField.forceActiveFocus();
+    }
 
     onKeyboardRaisedChanged: d.resize();
 
@@ -142,9 +150,6 @@ Item {
 
                 onLinkActivated: loginDialog.openUrl(link)
             }
-            onFocusChanged: {
-                root.text = "";
-            }
         }
 
         TextField {
@@ -171,11 +176,6 @@ Item {
                 linkColor: hifi.colors.blueAccent
 
                 onLinkActivated: loginDialog.openUrl(link)
-            }
-
-            onFocusChanged: {
-                root.text = "";
-                root.isPassword = true;
             }
 
             Keys.onReturnPressed: linkAccountBody.login()
@@ -243,7 +243,7 @@ Item {
                 visible: !loginDialog.isSteamRunning()
 
                 onClicked: {
-                    bodyLoader.setSource("SignUpBody.qml")
+                    bodyLoader.setSource("SignUpBody.qml", { 'keyboardContainer': keyboardContainer} )
                     if (!root.isTablet) {
                         bodyLoader.item.width = root.pane.width
                         bodyLoader.item.height = root.pane.height
@@ -263,6 +263,7 @@ Item {
         if (root.isTablet) {
             root.keyboardEnabled = HMD.active;
             root.keyboardRaised = Qt.binding( function() { return keyboardRaised; })
+            root.isPassword = Qt.binding(function() { return isPassword; })
         }
         d.resize();
 
