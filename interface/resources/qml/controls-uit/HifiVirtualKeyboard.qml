@@ -15,6 +15,7 @@ VirtualKeyboard {
     id: vk
     property var currentFocusItem: null;
     property var currentRaiseItem: null;
+    property var currentKeyboardInfo: null;
 
     QmlEventFilter {
         source: currentRaiseItem
@@ -74,6 +75,24 @@ VirtualKeyboard {
         } else {
             currentRaiseItem = null;
         }
+    }
+
+    function setNumeric(numeric) {
+        console.debug('setNumeric: ', numeric);
+
+        if(currentKeyboardInfo && currentKeyboardInfo.keyboardContainer && currentKeyboardInfo.keyboardContainer.hasOwnProperty("punctuationMode")) {
+            currentKeyboardInfo.keyboardContainer["punctuationMode"] = numeric;
+        } else {
+            parent.parent.punctuationMode = numeric
+        }
+    }
+
+    onSwitchToLetters: {
+        setNumeric(false);
+    }
+
+    onSwitchToNumeric: {
+        setNumeric(true);
     }
 
     function distanceToParent(from, to) {
@@ -144,6 +163,8 @@ VirtualKeyboard {
         } else {
             vk.parent = null;
         }
+
+        currentKeyboardInfo = keyboardKinfo;
     }
 
     function findChildren(item, exclude, objectName, onChildFoundCallback) {

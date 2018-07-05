@@ -17,6 +17,9 @@ Rectangle {
     objectName: "virtualkeyboard"
 
     signal collapsePressed();
+    signal switchToNumeric();
+    signal switchToLetters();
+
     onParentChanged: {
         console.debug('VirtualKeyboard: parent: ', parent);
 
@@ -311,7 +314,9 @@ Rectangle {
                 Key {
                     width: 70
                     glyph: "123"
-                    mouseArea.onClicked: keyboardBase.parent.parent.punctuationMode = true
+                    mouseArea.onClicked: {
+                        switchToNumeric();
+                    }
                 }
                 Key { width: 231; glyph: " "; }
                 Key { width: 43; glyph: ","; }
@@ -408,7 +413,9 @@ Rectangle {
                 Key {
                     width: 70
                     glyph: "abc"
-                    mouseArea.onClicked: keyboardBase.parent.parent.punctuationMode = false
+                    mouseArea.onClicked: {
+                        switchToLetters();
+                    }
                 }
                 Key { width: 231; glyph: " "; }
                 Key { width: 43; glyph: ","; }

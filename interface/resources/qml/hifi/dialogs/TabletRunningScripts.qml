@@ -34,6 +34,7 @@ Rectangle {
 
     property bool keyboardEnabled: HMD.active
     property bool keyboardRaised: false
+    property bool punctuationMode: false
 
     LetterboxMessage {
         id: letterBoxMessage
@@ -484,7 +485,7 @@ Rectangle {
     HifiControls.Keyboard {
         id: keyboard
         raised: parent.keyboardEnabled && parent.keyboardRaised
-        numeric: false
+        numeric: punctuationMode
         anchors {
             bottom: parent.bottom
             left: parent.left
