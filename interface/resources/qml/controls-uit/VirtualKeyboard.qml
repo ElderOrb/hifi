@@ -40,6 +40,14 @@ Rectangle {
         }
     }
 
+    Connections {
+        target: keyboardBase.parent
+        onResetShiftMode: {
+            console.debug('resetShiftMode: ', mode);
+            resetShiftMode(mode);
+        }
+    }
+
     /* for some reasons it doesn't work as it should / results in 'TypeError: Cannot read property of null' errors
     Binding on anchors.right {
         when: parent
