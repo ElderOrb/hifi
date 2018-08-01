@@ -15,7 +15,6 @@ Item {
         id: image
         anchors.fill: parent
         visible: false
-        anchors.margins: borderRectangle.border.width
     }
 
     Rectangle {
