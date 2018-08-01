@@ -1,4 +1,6 @@
 import QtQuick 2.0
+import QtQuick 2.0
+import QtGraphicalEffects 1.0
 
 Item {
 
@@ -12,15 +14,17 @@ Item {
     Image {
         id: image
         anchors.fill: parent
+        visible: false
         anchors.margins: borderRectangle.border.width
     }
 
     Rectangle {
         id: mask
         anchors.fill: image
+        visible: false
     }
 
-    TransparencyMask {
+    OpacityMask {
         anchors.fill: image
         source: image
         maskSource: mask
