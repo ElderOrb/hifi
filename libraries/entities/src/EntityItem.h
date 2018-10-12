@@ -478,6 +478,8 @@ public:
     void setScriptHasFinishedPreload(bool value);
     bool isScriptPreloadFinished();
 
+    virtual bool isWearable() const;
+
     bool getClientOnly() const { return _clientOnly; }
     virtual void setClientOnly(bool clientOnly) { _clientOnly = clientOnly; }
     // if this entity is client-only, which avatar is it associated with?

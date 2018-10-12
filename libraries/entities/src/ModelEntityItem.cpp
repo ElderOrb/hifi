@@ -519,6 +519,11 @@ QVector<bool> ModelEntityItem::getJointTranslationsSet() const {
     return result;
 }
 
+bool ModelEntityItem::isWearable() const
+{
+    return isVisible() && (getParentJointIndex() != INVALID_JOINT_INDEX || getRelayParentJoints())
+        && (getParentID() == DependencyManager::get<NodeList>()->getSessionUUID() || getParentID() == AVATAR_SELF_ID);
+}
 
 xColor ModelEntityItem::getXColor() const { 
     xColor color = { _color[RED_INDEX], _color[GREEN_INDEX], _color[BLUE_INDEX] }; return color; 

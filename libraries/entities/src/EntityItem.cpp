@@ -3221,3 +3221,8 @@ void EntityItem::setScriptHasFinishedPreload(bool value) {
 bool EntityItem::isScriptPreloadFinished() {
     return _scriptPreloadFinished;
 }
+
+bool EntityItem::isWearable() const {
+    return isVisible() && getParentJointIndex() != INVALID_JOINT_INDEX
+        && (getParentID() == DependencyManager::get<NodeList>()->getSessionUUID() || getParentID() == AVATAR_SELF_ID);
+}
