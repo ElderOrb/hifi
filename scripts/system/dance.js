@@ -15,7 +15,7 @@
 (function () { // BEGIN LOCAL_SCOPE
     console.debug('*** dance.js ***');
 
-    var DANCE_QML_SOURCE = "hifi/Dance.qml";
+    var DANCE_QML_SOURCE = Script.resolvePath("Dance.qml");
     var dances = [];
 
     // Setup the dance button
